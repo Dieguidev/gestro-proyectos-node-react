@@ -307,47 +307,47 @@ export class AuthServicePrisma {
   async requestConfirmationCode(
     requestConfirmationCodeDto: RequestConfirmationCodeDto
   ) {
-    const session = await startSession();
-    session.startTransaction();
-
-    const existUser = await UserModel.findOne({
-      email: requestConfirmationCodeDto.email,
-    });
-    if (!existUser) {
-      throw CustomError.badRequest('User not exist');
-    }
-    if (existUser.confirmed) {
-      throw CustomError.badRequest('User already confirmed');
-    }
+    const { email } = requestConfirmationCodeDto;
     try {
-      const sixDigittoken = new SixDigitsTokenModel();
-      sixDigittoken.token = generateSixDigitToken();
-      sixDigittoken.user = existUser.id;
-      // console.log("Generated token:", sixDigittoken.token);
-      await sixDigittoken.save({ session });
-
-      //enviar correo de verificacion
-      // await this.sendEmailValidationLink(user.email)
-
-      const { password, ...userEntity } = UserEntity.fromJson(existUser);
-
-      // const token = await this.generateTokenService(user.id)
-      await this.sendEmailValidationSixdigitToken({
-        email: existUser.email,
-        name: existUser.name,
-        token: sixDigittoken.token,
+      const user = await prisma.user.findUnique({
+        where: { email },
       });
+      if (!user) {
+        throw CustomError.badRequest('Invalid credentials');
+      }
 
-      await session.commitTransaction();
-      session.endSession();
+      if (user.confirmed) {
+        throw CustomError.badRequest('User already confirmed');
+      }
+
+      if (!user.confirmed) {
+        await prisma.$transaction(async (prisma) => {
+          const sixDigitsToken = generateSixDigitToken();
+          await prisma.verificationToken.upsert({
+            where: { userId: user.id },
+            create: {
+              userId: user.id,
+              token: sixDigitsToken,
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+            },
+            update: {
+              token: sixDigitsToken,
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+            },
+          });
+
+          await this.sendEmailValidationSixdigitToken({
+            email: user.email,
+            name: user.name,
+            token: sixDigitsToken,
+          });
+        });
+      }
 
       return {
-        user: userEntity,
-        // token
+        user: UserResponseDto.create(user),
       };
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
+    } catch (error: any) {
       if (error instanceof CustomError) {
         throw error;
       }
