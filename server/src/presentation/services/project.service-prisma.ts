@@ -29,7 +29,6 @@ export class ProjectServicePrisma {
     }
   }
 
-  //TODO: Falta verificación de proyectos donde eres miembro
   async getAllProjects(paginationDto: PaginationDto, userId: User['id']) {
     const { page, limit } = paginationDto;
     const skip = (page - 1) * limit;
@@ -153,7 +152,6 @@ export class ProjectServicePrisma {
     }
   }
 
-  //TODO: Falta verificación de proyectos donde eres miembro
   async deleteProject(projectId: Project['id']) {
     try {
       await prisma.project.delete({
