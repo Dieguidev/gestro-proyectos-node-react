@@ -79,7 +79,7 @@ export class AuthController {
     const [error, forgotPasswordDto] = ForgotPasswordDto.create(req.body)
     if (error) return res.status(400).json({ error })
 
-    this.authService.forgotPassword(forgotPasswordDto!)
+    this.authServicePrisma.forgotPassword(forgotPasswordDto!)
       .then((user) => res.json(user))
       .catch((error) => this.handleError(error, res));
   }

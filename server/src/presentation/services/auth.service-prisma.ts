@@ -356,41 +356,46 @@ export class AuthServicePrisma {
   }
 
   async forgotPassword(requestConfirmationCodeDto: RequestConfirmationCodeDto) {
-    const session = await startSession();
+    const { email } = requestConfirmationCodeDto;
 
     try {
-      await session.withTransaction(async () => {
-        const existUser = await UserModel.findOne({
-          email: requestConfirmationCodeDto.email,
-        }).session(session);
-        if (!existUser) {
-          throw CustomError.badRequest('User not exist');
-        }
+      const user = await prisma.user.findUnique({
+        where: { email },
+      });
+      if (!user) {
+        throw CustomError.badRequest('Invalid email');
+      }
 
-        const sixDigittoken = new SixDigitsTokenModel();
-        sixDigittoken.token = generateSixDigitToken();
-        sixDigittoken.user = existUser.id;
-        await sixDigittoken.save({ session });
-
-        const { password, ...userEntity } = UserEntity.fromJson(existUser);
-
-        await this.sendEmaiForgotPassword({
-          email: existUser.email,
-          name: existUser.name,
-          token: sixDigittoken.token,
+      await prisma.$transaction(async (prisma) => {
+        const sixDigitsToken = generateSixDigitToken();
+        await prisma.verificationToken.upsert({
+          where: { userId: user.id },
+          create: {
+            userId: user.id,
+            token: sixDigitsToken,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          },
+          update: {
+            token: sixDigitsToken,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          },
         });
 
-        return {
-          user: userEntity,
-        };
+        await this.sendEmaiForgotPassword({
+          email: user.email,
+          name: user.name,
+          token: sixDigitsToken,
+        });
       });
+
+      return {
+        user: UserResponseDto.create(user),
+      };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
       throw CustomError.internalServer(`${error}`);
-    } finally {
-      session.endSession();
     }
   }
 
