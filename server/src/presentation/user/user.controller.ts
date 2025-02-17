@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { UserServicePrisma } from '../services/user.service-prisma';
-import { CustomError, UpdateCurrentUserPasswordDto, UpdateUserDto } from '../../domain';
+import {
+  CheckPasswordDto,
+  CustomError,
+  UpdateCurrentUserPasswordDto,
+  UpdateUserDto,
+} from '../../domain';
 import { AuthServicePrisma } from '../services/auth.service-prisma';
 
 export class UserController {
@@ -41,6 +46,16 @@ export class UserController {
     this.userServicePrisma
       .updateCurrentUserPassword(updateCurrentUserPasswordDto!, req.userPrisma!)
       .then((user) => res.json(user))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  checkPassword = (req: Request, res: Response) => {
+    const [error, checkPasswordDto] = CheckPasswordDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.userServicePrisma
+      .checkPassword(checkPasswordDto!, req.userPrisma!)
+      .then((rpta) => res.json(rpta))
       .catch((error) => this.handleError(error, res));
   };
 }

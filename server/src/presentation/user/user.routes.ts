@@ -15,6 +15,11 @@ export class UserRoutes {
       [AuthMiddleware.validateJWT],
       controller.updateCurrentUserPassword
     );
+    router.post(
+      '/check-password',
+      [AuthMiddleware.validateJWT],
+      controller.checkPassword
+    );
 
     return router;
   }

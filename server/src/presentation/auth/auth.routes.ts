@@ -38,12 +38,6 @@ export class AuthRoutes {
     router.post('/validate-token', controller.validateTokenToResetPassword);
     router.put('/update-password/:token', controller.updatePassword);
 
-    router.post(
-      '/check-password',
-      [AuthMiddleware.validateJWT],
-      controller.checkPassword
-    );
-
     // router.get('/', [AuthMiddleware.validateJWT], controller.getUsers)
 
     return router;

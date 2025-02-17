@@ -455,7 +455,6 @@ export class AuthServicePrisma {
     const { token, password } = updatePasswordDto;
 
     try {
-
       const sixDigitTokenExists = await prisma.verificationToken.findFirst({
         where: { token },
       });
@@ -474,7 +473,7 @@ export class AuthServicePrisma {
             },
           },
         },
-      })
+      });
 
       return 'El password se actualizó correctamente';
     } catch (error) {
@@ -483,29 +482,6 @@ export class AuthServicePrisma {
         throw error;
       }
       throw CustomError.internalServer(`${error}`);
-    }
-  }
-
-  public async checkPassword(checkPasswordDto: CheckPasswordDto, user: any) {
-    const { password } = checkPasswordDto;
-
-    try {
-      const existsUser = await UserModel.findById(user.id);
-
-      const isMatchPassword = this.comparePassword(
-        password,
-        existsUser!.password
-      );
-      if (!isMatchPassword) {
-        throw CustomError.badRequest('El password actual no coincide');
-      }
-
-      return 'Password correcto';
-    } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServer();
     }
   }
 }

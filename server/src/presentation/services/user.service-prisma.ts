@@ -1,5 +1,6 @@
 import { User } from '@prisma/client';
 import {
+  CheckPasswordDto,
   CustomError,
   UpdateCurrentUserPasswordDto,
   UpdateUserDto,
@@ -95,6 +96,27 @@ export class UserServicePrisma {
       });
 
       return 'Password actualizado correctamente';
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw CustomError.internalServer();
+    }
+  }
+
+  public async checkPassword(checkPasswordDto: CheckPasswordDto, user: User) {
+    const { password } = checkPasswordDto;
+
+    try {
+      const isMatchPassword = this.comparePassword(
+        password,
+        user.password
+      );
+      if (!isMatchPassword) {
+        throw CustomError.badRequest('El password actual no coincide');
+      }
+
+      return 'Password correcto';
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
