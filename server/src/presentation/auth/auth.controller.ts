@@ -84,11 +84,11 @@ export class AuthController {
       .catch((error) => this.handleError(error, res));
   }
 
-  validateTokenFromResetPassword = (req: Request, res: Response) => {
+  validateTokenToResetPassword = (req: Request, res: Response) => {
     const [error, confirmTokenDto] = ConfirmTokenDto.create(req.body)
     if (error) return res.status(400).json({ error })
 
-    this.authService.validateTokenFromResetPassword(confirmTokenDto!)
+    this.authServicePrisma.validateTokenToResetPassword(confirmTokenDto!)
       .then((rpta) => res.json(rpta))
       .catch((error) => this.handleError(error, res));
   }

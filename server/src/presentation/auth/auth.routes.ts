@@ -35,7 +35,7 @@ export class AuthRoutes {
       controller.requestConfirmationCode
     );
     router.post('/forgot-password', controller.forgotPassword);
-    router.post('/validate-token', controller.validateTokenFromResetPassword);
+    router.post('/validate-token', controller.validateTokenToResetPassword);
     router.put('/update-password/:token', controller.updatePassword);
     router.get('/user', [AuthMiddleware.validateJWT], controller.user);
 

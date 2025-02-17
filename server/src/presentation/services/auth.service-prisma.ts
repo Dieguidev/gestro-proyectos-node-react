@@ -430,13 +430,13 @@ export class AuthServicePrisma {
     }
   }
 
-  public async validateTokenFromResetPassword(
-    confirmTokenDto: ConfirmTokenDto
-  ) {
+  public async validateTokenToResetPassword(confirmTokenDto: ConfirmTokenDto) {
+    const { token } = confirmTokenDto;
     try {
-      const sixDigitTokenExists = await SixDigitsTokenModel.findOne({
-        token: confirmTokenDto.token,
+      const sixDigitTokenExists = await prisma.verificationToken.findFirst({
+        where: { token },
       });
+
       if (!sixDigitTokenExists) {
         throw CustomError.badRequest('Invalid token');
       }
