@@ -104,20 +104,9 @@ export class AuthController {
   }
 
 
-  user = (req: Request, res: Response) => {
-    this.authService.user(req.user!)
-      .then((user) => res.json(user))
-      .catch((error) => this.handleError(error, res));
-  }
 
-  updateCurrentUserPassword = (req: Request, res: Response) => {
-    const [error, updateCurrentUserPasswordDto] = UpdateCurrentUserPasswordDto.create(req.body)
-    if (error) return res.status(400).json({ error })
 
-    this.authService.updateCurrentUserPassword(updateCurrentUserPasswordDto!, req.user!)
-      .then((user) => res.json(user))
-      .catch((error) => this.handleError(error, res));
-  }
+
 
   checkPassword = (req: Request, res: Response) => {
     const [error, checkPasswordDto] = CheckPasswordDto.create(req.body)

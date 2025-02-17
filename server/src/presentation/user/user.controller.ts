@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UserServicePrisma } from '../services/user.service-prisma';
-import { CustomError, UpdateUserDto } from '../../domain';
+import { CustomError, UpdateCurrentUserPasswordDto, UpdateUserDto } from '../../domain';
+import { AuthServicePrisma } from '../services/auth.service-prisma';
 
 export class UserController {
   constructor(private readonly userServicePrisma: UserServicePrisma) {}
@@ -21,6 +22,24 @@ export class UserController {
 
     this.userServicePrisma
       .update(updateUserDto!, req.userPrisma!)
+      .then((user) => res.json(user))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  user = (req: Request, res: Response) => {
+    this.userServicePrisma
+      .user(req.userPrisma!)
+      .then((user) => res.json(user))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  updateCurrentUserPassword = (req: Request, res: Response) => {
+    const [error, updateCurrentUserPasswordDto] =
+      UpdateCurrentUserPasswordDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.userServicePrisma
+      .updateCurrentUserPassword(updateCurrentUserPasswordDto!, req.userPrisma!)
       .then((user) => res.json(user))
       .catch((error) => this.handleError(error, res));
   };

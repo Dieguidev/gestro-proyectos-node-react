@@ -486,41 +486,6 @@ export class AuthServicePrisma {
     }
   }
 
-  public async user(user: unknown) {
-    return {
-      user,
-    };
-  }
-
-  public async updateCurrentUserPassword(
-    UpdateCurrentUserPasswordDto: UpdateCurrentUserPasswordDto,
-    user: any
-  ) {
-    const { currentPassword, password } = UpdateCurrentUserPasswordDto;
-
-    try {
-      const existsUser = await UserModel.findById(user.id);
-
-      const isMatchPassword = this.comparePassword(
-        currentPassword,
-        existsUser!.password
-      );
-      if (!isMatchPassword) {
-        throw CustomError.badRequest('El password actual no coincide');
-      }
-
-      existsUser!.password = this.hashPassword(password);
-      await existsUser!.save();
-
-      return 'Password actualizado correctamente';
-    } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServer();
-    }
-  }
-
   public async checkPassword(checkPasswordDto: CheckPasswordDto, user: any) {
     const { password } = checkPasswordDto;
 
