@@ -83,7 +83,7 @@ export class ProjectController {
   findMemberByEmail = (req: Request, res: Response) => {
     const [error, findMemberByEmailDto] = FindMemberByEmailDto.create(req.body);
     if (error) return res.status(400).json({ error });
-    this.projectService
+    this.projectServicePrimsa
       .findMemberByEmail(findMemberByEmailDto!)
       .then((member) => res.json(member))
       .catch((error) => this.handleError(error, res));
@@ -93,8 +93,8 @@ export class ProjectController {
     const [error, addTeamMemberDto] = AddTeamMemberDto.create(req.body);
     if (error) return res.status(400).json({ error });
 
-    this.projectService
-      .addMemberById(addTeamMemberDto!, req.project!)
+    this.projectServicePrimsa
+      .addMemberById(addTeamMemberDto!, req.project?.id!)
       .then((member) => res.json(member))
       .catch((error) => this.handleError(error, res));
   };

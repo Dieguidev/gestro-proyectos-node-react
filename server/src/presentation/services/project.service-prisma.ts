@@ -88,7 +88,6 @@ export class ProjectServicePrisma {
     }
   }
 
-
   async getProjectById(
     getByIdProjectDto: GetByIdProjectDto,
     userId: User['id']
@@ -117,15 +116,6 @@ export class ProjectServicePrisma {
       ) {
         throw CustomError.forbidden('Acción no válida');
       }
-
-      // const projectTeamstoString = project.team.map((id: any) => id.toString());
-
-      // if (
-      //   project.manager!.toString() !== userId &&
-      //   !projectTeamstoString.includes(userId)
-      // ) {
-      //   throw CustomError.forbidden('Acción no válida');
-      // }
 
       return { project };
     } catch (error) {
@@ -185,7 +175,16 @@ export class ProjectServicePrisma {
   async findMemberByEmail(findMemberByEmailDto: FindMemberByEmailDto) {
     const { email } = findMemberByEmailDto;
     try {
-      const user = await UserModel.findOne({ email }).select('id name email');
+      const user = await prisma.user.findUnique({
+        where: {
+          email,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      });
       if (!user) {
         throw CustomError.notFound('Usuario no encontrado');
       }
@@ -194,27 +193,63 @@ export class ProjectServicePrisma {
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
+
       throw CustomError.internalServer();
     }
   }
 
-  async addMemberById(addTeamMemberDto: AddTeamMemberDto, project: any) {
+  async addMemberById(
+    addTeamMemberDto: AddTeamMemberDto,
+    projectId: Project['id']
+  ) {
     const { userId } = addTeamMemberDto;
+    try {
+      return await prisma.$transaction(async (prisma) => {
+        const [project, user] = await Promise.all([
+          await prisma.project.findUnique({
+            where: {
+              id: projectId,
+            },
+            include: {
+              TeamProject: {
+                where: {
+                  NOT: { userId },
+                },
+              },
+            },
+          }),
+          await prisma.user.findUnique({
+            where: {
+              id: userId,
+            },
+            select: {
+              id: true,
+            },
+          }),
+        ]);
 
-    const user = await UserModel.findById(userId).select('id');
-    if (!user) {
-      throw CustomError.notFound('Usuario no encontrado');
+        if (!user) throw CustomError.notFound('Usuario no encontrado');
+        if (!project)
+          throw CustomError.notFound('Usuario ya registrado en el proyecto');
+
+        await prisma.teamProject.create({
+          data: {
+            userId: user.id,
+            projectId: project.id,
+          },
+        });
+        return 'Usuario agregado correctamente';
+      });
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      console.log(`${error}`);
+      throw CustomError.internalServer();
     }
-
-    if (project.team.includes(user.id)) {
-      throw CustomError.badRequest('Usuario ya se encuentra en el equipo');
-    }
-
-    project.team.push(user.id);
-    await project.save();
-
-    return 'Usuario agregado correctamente';
   }
+
   async removeMemberById(addTeamMemberDto: AddTeamMemberDto, project: any) {
     const { userId } = addTeamMemberDto;
 

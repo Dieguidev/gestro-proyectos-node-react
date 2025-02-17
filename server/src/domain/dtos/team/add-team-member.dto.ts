@@ -10,7 +10,7 @@ export class AddTeamMemberDto {
     const { userId } = object;
 
     if (!userId) return ['Missing userId'];
-    if(!Validators.isMongoID(userId)) return ['Invalid userId']
+    if(!Validators.isUUID(userId)) return ['Invalid userId']
 
     return [undefined, new AddTeamMemberDto( userId)]
   }
