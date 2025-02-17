@@ -1,19 +1,25 @@
-import { IProject, IUser, ProjectModel, UserModel } from "../../data/mongodb";
-import { CreateProjectDto, CustomError, DeleteProjectDto, GetByIdProjectDto, PaginationDto, ProjectEntity, UpdateProjectDto } from "../../domain";
+import { IProject, IUser, ProjectModel, UserModel } from '../../data/mongodb';
+import {
+  CreateProjectDto,
+  CustomError,
+  DeleteProjectDto,
+  GetByIdProjectDto,
+  PaginationDto,
+  ProjectEntity,
+  UpdateProjectDto,
+} from '../../domain';
 import { FindMemberByEmailDto } from '../../domain/dtos/team/find-member-by-email.dto';
 import { AddTeamMemberDto } from '../../domain/dtos/team/add-team-member.dto';
-
-
+import { prisma } from '../../data/prisma/prisma-db';
 
 export class ProjectServicePrisma {
   async createProject(creaProjectDto: CreateProjectDto) {
     try {
-      const project = new ProjectModel(creaProjectDto);
+      const project = await prisma.project.create({
+        data: creaProjectDto,
+      });
 
-      await project.save();
-
-      return { project: ProjectEntity.fromJson(project) };
-
+      return { project };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -21,7 +27,6 @@ export class ProjectServicePrisma {
       throw CustomError.internalServer();
     }
   }
-
 
   async getAllProjects(paginationDto: PaginationDto, userId: IUser['_id']) {
     const { page, limit } = paginationDto;
@@ -31,26 +36,30 @@ export class ProjectServicePrisma {
       const [total, projects] = await Promise.all([
         ProjectModel.countDocuments(),
         ProjectModel.find({
-          $or: [
-            { manager: { $in: userId } },
-            { team: { $in: userId } }
-          ]
+          $or: [{ manager: { $in: userId } }, { team: { $in: userId } }],
         })
           .skip(skip)
-          .limit(limit)
-      ])
+          .limit(limit),
+      ]);
 
-      const listProjects: ProjectEntity[] = projects.map((project: IProject) => ProjectEntity.fromJson(project));
+      const listProjects: ProjectEntity[] = projects.map((project: IProject) =>
+        ProjectEntity.fromJson(project)
+      );
 
       return {
         page,
         limit,
         total: total,
-        next: (total - (page * limit)) > 0 ? `/api/categories?page=${page + 1}&limit=${limit}` : null,
-        prev: (page - 1 > 0) ? `/api/categories?page=${page - 1}&limit=${limit}` : null,
-        projects: listProjects
-      }
-
+        next:
+          total - page * limit > 0
+            ? `/api/categories?page=${page + 1}&limit=${limit}`
+            : null,
+        prev:
+          page - 1 > 0
+            ? `/api/categories?page=${page - 1}&limit=${limit}`
+            : null,
+        projects: listProjects,
+      };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -59,8 +68,10 @@ export class ProjectServicePrisma {
     }
   }
 
-
-  async getProjectById(getByIdProjectDto: GetByIdProjectDto, userId: IUser['_id']) {
+  async getProjectById(
+    getByIdProjectDto: GetByIdProjectDto,
+    userId: IUser['_id']
+  ) {
     const { id } = getByIdProjectDto;
     try {
       const project = await ProjectModel.findById(id).populate('tasks').exec();
@@ -73,9 +84,10 @@ export class ProjectServicePrisma {
 
       const projectTeamstoString = project.team.map((id: any) => id.toString());
 
-
-
-      if (project.manager!.toString() !== userId && !projectTeamstoString.includes(userId)) {
+      if (
+        project.manager!.toString() !== userId &&
+        !projectTeamstoString.includes(userId)
+      ) {
         throw CustomError.forbidden('Acción no válida');
       }
 
@@ -102,9 +114,8 @@ export class ProjectServicePrisma {
     }
   }
 
-
   async updateProject(updateProjectDto: UpdateProjectDto, project: any) {
-    const { clientName, description, projectName } = updateProjectDto
+    const { clientName, description, projectName } = updateProjectDto;
     try {
       project.clientName = clientName;
       project.description = description;
@@ -119,8 +130,6 @@ export class ProjectServicePrisma {
       throw CustomError.internalServer();
     }
   }
-
-
 
   async findMemberByEmail(findMemberByEmailDto: FindMemberByEmailDto) {
     const { email } = findMemberByEmailDto;
@@ -153,9 +162,7 @@ export class ProjectServicePrisma {
     project.team.push(user.id);
     await project.save();
 
-
     return 'Usuario agregado correctamente';
-
   }
   async removeMemberById(addTeamMemberDto: AddTeamMemberDto, project: any) {
     const { userId } = addTeamMemberDto;
@@ -164,7 +171,9 @@ export class ProjectServicePrisma {
       throw CustomError.badRequest('Usuario no se encuentra en el proyecto');
     }
 
-    project.team = project.team.filter((id: string) => id.toString() !== userId.toString());
+    project.team = project.team.filter(
+      (id: string) => id.toString() !== userId.toString()
+    );
     await project.save();
 
     return 'Usuario eliminado correctamente';
@@ -173,7 +182,7 @@ export class ProjectServicePrisma {
   async getMembers(project: any) {
     const members = await project.populate({
       path: 'team',
-      select: 'id name email'
+      select: 'id name email',
     });
     return members.team;
   }
