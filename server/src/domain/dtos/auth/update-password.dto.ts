@@ -1,9 +1,5 @@
 export class UpdatePasswordDto {
-  private constructor(
-    public password: string,
-    public passwordConfirmation: string,
-    public token: string,
-  ) { }
+  private constructor(public password: string, public token: string) {}
 
   static create(object: { [key: string]: any }): [string?, UpdatePasswordDto?] {
     const { password, passwordConfirmation, token } = object;
@@ -15,6 +11,6 @@ export class UpdatePasswordDto {
     if (!token) return ['Missing token'];
     if (token.length !== 6) return ['Invalid token'];
 
-    return [undefined, new UpdatePasswordDto(password, passwordConfirmation, token)];
+    return [undefined, new UpdatePasswordDto(password, token)];
   }
 }

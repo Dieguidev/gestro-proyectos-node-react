@@ -453,36 +453,31 @@ export class AuthServicePrisma {
 
   public async updatePasswordWithToken(updatePasswordDto: UpdatePasswordDto) {
     const { token, password } = updatePasswordDto;
-    console.log(token, password);
 
-    const session = await startSession();
-    session.startTransaction();
     try {
-      const sixDigitTokenExists = await SixDigitsTokenModel.findOne({
-        token,
+
+      const sixDigitTokenExists = await prisma.verificationToken.findFirst({
+        where: { token },
       });
 
       if (!sixDigitTokenExists) {
         throw CustomError.badRequest('Invalid token');
       }
 
-      const user = await UserModel.findById(sixDigitTokenExists.user);
-      console.log(user);
-
-      if (!user) {
-        throw CustomError.badRequest('User not found');
-      }
-      user!.password = this.hashPassword(password);
-      await user!.save({ session });
-      await sixDigitTokenExists.deleteOne({ session });
-
-      await session.commitTransaction();
-      session.endSession();
+      const updatedUser = await prisma.user.update({
+        where: { id: sixDigitTokenExists.userId },
+        data: {
+          password: this.hashPassword(password),
+          VerificationToken: {
+            update: {
+              token: '',
+            },
+          },
+        },
+      })
 
       return 'El password se actualizó correctamente';
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       console.log(error);
       if (error instanceof CustomError) {
         throw error;

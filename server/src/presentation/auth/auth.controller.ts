@@ -98,7 +98,7 @@ export class AuthController {
     const [error, updatePasswordDto] = UpdatePasswordDto.create({ ...req.body, token })
     if (error) return res.status(400).json({ error })
 
-    this.authService.updatePasswordWithToken(updatePasswordDto!)
+    this.authServicePrisma.updatePasswordWithToken(updatePasswordDto!)
       .then((user) => res.json(user))
       .catch((error) => this.handleError(error, res));
   }
