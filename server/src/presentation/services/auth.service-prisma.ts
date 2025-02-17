@@ -1,6 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
 import { startSession } from 'mongoose';
 import { BcryptAdapter, envs, JwtAdapter } from '../../config';
 import { SixDigitsTokenModel } from '../../data/mongodb/models/sixDigitsToken';
@@ -23,8 +20,8 @@ import {
 } from '../../domain';
 import { EmailService } from './email.service';
 import { prisma } from '../../data/prisma/prisma-db';
-import { TokenService } from './token.service.prisma';
 import { UserResponseDto } from '../../domain/dtos/auth/response-user.dto';
+import { LoginResponseDto } from '../../domain/dtos/auth/response-login.dto';
 
 type HashFunction = (password: string) => string;
 type ConpareFunction = (password: string, hashed: string) => boolean;
@@ -37,7 +34,9 @@ export class AuthServicePrisma {
     private readonly comparePassword: ConpareFunction = BcryptAdapter.compare
   ) {}
 
-  async registerUser(registerUserDto: RegisterUserDto) {
+  async registerUser(
+    registerUserDto: RegisterUserDto
+  ): Promise<UserResponseDto> {
     const { password, email, name } = registerUserDto;
 
     try {
@@ -70,7 +69,7 @@ export class AuthServicePrisma {
         console.log(user);
 
         try {
-          this.sendEmailValidationSixdigitToken({
+          await this.sendEmailValidationSixdigitToken({
             email: user.email,
             name: user.name,
             token: sixDigitsToken,
@@ -93,62 +92,51 @@ export class AuthServicePrisma {
 
   async loginUser(loginUserDto: LoginUserDto) {
     const { email, password } = loginUserDto;
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      throw CustomError.badRequest('User or email invalid');
-    }
-
-    //ismatch ..bcrypt
-    const isMatchPassword = this.comparePassword(password, user.password);
-    if (!isMatchPassword) {
-      throw CustomError.badRequest('Invalid credentials');
-    }
-    if (!user.confirmed) {
-      const sixDigitoken = new SixDigitsTokenModel();
-      sixDigitoken.token = generateSixDigitToken();
-      sixDigitoken.user = user.id;
-      await sixDigitoken.save();
-
-      await this.sendEmailValidationSixdigitToken({
-        email: user.email,
-        name: user.name,
-        token: sixDigitoken.token,
-      });
-      throw CustomError.badRequest('User not confirmed');
-    }
-
-    const { password: _, ...userEntity } = UserEntity.fromJson(user);
-
-    const token = await this.generateTokenService(user.id);
-
-    return {
-      // user: userEntity,
-      token,
-    };
-  }
-
-  async update(updateUserDto: UpdateUserDto, user: any) {
-    const { name, email } = updateUserDto;
     try {
-      const userExist = await UserModel.findOne({ email });
-      if (userExist && userExist.id.toString() !== user.id.toString()) {
-        throw CustomError.badRequest('Ese email ya esta en uso');
-      }
+      return await prisma.$transaction(async (prisma) => {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+          throw CustomError.badRequest('Invalid credentials');
+        }
 
-      user.name = name;
-      user.email = email;
-      await user.save();
+        const isMatchPassword = this.comparePassword(password, user.password);
+        if (!isMatchPassword) {
+          throw CustomError.badRequest('Invalid credentials');
+        }
 
-      return 'Perfil actualizado correctamente';
+        const sixDigitsToken = generateSixDigitToken();
+
+        if (!user.confirmed) {
+          await prisma.verificationToken.update({
+            where: { userId: user.id },
+            data: {
+              token: sixDigitsToken,
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+            },
+          });
+
+          await this.sendEmailValidationSixdigitToken({
+            email: user.email,
+            name: user.name,
+            token: sixDigitsToken,
+          });
+          throw CustomError.badRequest(
+            'Unconfirmed email, email with token is sent'
+          );
+        }
+
+        const token = await this.generateJWTTokenService(user.id);
+
+        return LoginResponseDto.create(user, token);
+      });
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
-      console.log(error);
-
-      throw CustomError.internalServer();
+      throw CustomError.internalServer(`${error}`);
     }
   }
+
 
   async delete(getAndDeleteUserDto: GetAndDeleteUserDto) {
     const { id } = getAndDeleteUserDto;
@@ -175,7 +163,7 @@ export class AuthServicePrisma {
   }
 
   //metodo para genrar token--puede ser un caso de uso
-  private async generateTokenService(id: string) {
+  private async generateJWTTokenService(id: string) {
     const token = await JwtAdapter.generateToken({ id });
     if (!token) {
       throw CustomError.internalServer('Error generating token');
@@ -210,12 +198,7 @@ export class AuthServicePrisma {
         throw new Error('Error sending email');
       }
     } catch (error: any) {
-      // Guardar el error en un archivo
       console.log(error);
-
-      const logFilePath = path.join(__dirname, 'error.log');
-      const logMessage = `Error al enviar correo a ${user.email}\nError: ${error.message}\n\n`;
-      fs.appendFileSync(logFilePath, logMessage);
       throw CustomError.internalServer('Error sending email 1');
     }
   }
@@ -251,10 +234,7 @@ export class AuthServicePrisma {
         throw new Error('Error sending email');
       }
     } catch (error: any) {
-      // Guardar el error en un archivo
-      const logFilePath = path.join(__dirname, 'error.log');
-      const logMessage = `Error al enviar correo a \nError: ${error.message}\n\n`;
-      fs.appendFileSync(logFilePath, logMessage);
+      console.log(error);
       throw CustomError.internalServer('Error sending email 2');
     }
 

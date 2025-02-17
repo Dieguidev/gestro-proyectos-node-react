@@ -39,20 +39,12 @@ export class AuthController {
     const [error, loginUserDto] = LoginUserDto.create(req.body)
     if (error) return res.status(400).json({ error })
 
-    this.authService.loginUser(loginUserDto!)
+    this.authServicePrisma.loginUser(loginUserDto!)
       .then((user) => res.json(user))
       .catch((error) => this.handleError(error, res));
   }
 
 
-  updateUser = (req: Request, res: Response) => {
-    const [error, updateUserDto] = UpdateUserDto.create(req.body)
-    if (error) return res.status(400).json({ error })
-
-    this.authService.update(updateUserDto!, req.user!)
-      .then((user) => res.json(user))
-      .catch((error) => this.handleError(error, res));
-  }
 
 
   deleteUser = (req: Request, res: Response) => {

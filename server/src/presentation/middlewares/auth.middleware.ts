@@ -1,11 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import { JwtAdapter } from "../../config/jwt";
 import { IUser, UserModel } from "../../data/mongodb";
+import { prisma } from "../../data/prisma/prisma-db";
+import { User } from "@prisma/client";
+import { Types } from "mongoose";
 
 declare global {
   namespace Express {
     interface Request {
       user?: IUser;
+      userPrisma?: User;
     }
   }
 }
@@ -24,14 +28,31 @@ export class AuthMiddleware {
     try {
       const payload = await JwtAdapter.validateToken<{ id: string }>(token);
       if (!payload) return res.status(401).json({ error: 'Invalid token - user' });
+      //*mongodb
+      // Determinar la fuente basándose en el formato del ID
+      const isMongoId = Types.ObjectId.isValid(payload.id);
+      if (isMongoId) {
+        // Buscar en MongoDB
+        const user = await UserModel.findById(payload.id).select('id name email');
+        if (!user) return res.status(401).json({ error: 'Invalid token - user not found in MongoDB' });
+        req.user = user;
+      }
+      //*prisma
+      const userPrisma = await prisma.user.findUnique({ where: { id: payload.id } });
+      // if (!userPrisma) return res.status(401).json({ error: 'Invalid token' });
+      if (!userPrisma && !req.user) {
+        return res.status(401).json({ error: 'Invalid token - user not found' });
+      }
 
-      const user = await UserModel.findById(payload.id).select('id name email');
-      if (!user) return res.status(401).json({ error: 'Invalid token' });
+      if (userPrisma) {
+        req.userPrisma = userPrisma;
+      }
 
       //todo: validar si el usuario esta activo
       // if (!user.status) return res.status(401).json({ error: 'User is not active' });
+      // req.user = user;
 
-      req.user = user;
+      // req.userPrisma = userPrisma;
       next();
 
     } catch (error) {

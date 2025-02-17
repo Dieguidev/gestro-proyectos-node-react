@@ -39,7 +39,6 @@ export class AuthRoutes {
     router.put('/update-password/:token', controller.updatePassword);
     router.get('/user', [AuthMiddleware.validateJWT], controller.user);
 
-    router.put('/profile', [AuthMiddleware.validateJWT], controller.updateUser);
     router.post(
       '/update-password',
       [AuthMiddleware.validateJWT],
