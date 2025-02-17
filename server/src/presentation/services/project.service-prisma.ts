@@ -88,7 +88,7 @@ export class ProjectServicePrisma {
     }
   }
 
-  //TODO: Falta verificación de proyectos donde eres miembro
+
   async getProjectById(
     getByIdProjectDto: GetByIdProjectDto,
     userId: User['id']
@@ -136,6 +136,34 @@ export class ProjectServicePrisma {
     }
   }
 
+  async updateProject(
+    updateProjectDto: UpdateProjectDto,
+    projectId: Project['id']
+  ) {
+    const { clientName, description, projectName } = updateProjectDto;
+    try {
+      const project = await prisma.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          clientName,
+          description,
+          projectName,
+        },
+      });
+
+      return { project };
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      console.log(`${error}`);
+      throw CustomError.internalServer();
+    }
+  }
+
+  //TODO: Falta verificación de proyectos donde eres miembro
   async deleteProject(projectId: Project['id']) {
     try {
       await prisma.project.delete({
@@ -150,23 +178,6 @@ export class ProjectServicePrisma {
       }
       console.log(`${error}`);
 
-      throw CustomError.internalServer();
-    }
-  }
-
-  async updateProject(updateProjectDto: UpdateProjectDto, project: any) {
-    const { clientName, description, projectName } = updateProjectDto;
-    try {
-      project.clientName = clientName;
-      project.description = description;
-      project.projectName = projectName;
-      await project.save();
-
-      return { project: ProjectEntity.fromJson(project) };
-    } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
       throw CustomError.internalServer();
     }
   }

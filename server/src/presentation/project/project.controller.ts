@@ -67,8 +67,8 @@ export class ProjectController {
     const [error, updateProjectDto] = UpdateProjectDto.create(req.body);
     if (error) return res.status(400).json({ error });
 
-    this.projectService
-      .updateProject(updateProjectDto!, req.project!)
+    this.projectServicePrimsa
+      .updateProject(updateProjectDto!, req.project?.id!)
       .then((project) => res.json(project))
       .catch((error) => this.handleError(error, res));
   };
