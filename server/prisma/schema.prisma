@@ -62,13 +62,13 @@ model Project {
   clientName  String
   description String
   isActive    Boolean @default(true)
-  managerId   User    @relation(fields: [userId], references: [id])
+  manager     User    @relation(fields: [managerId], references: [id])
+  managerId   String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   TeamProject TeamProject[]
-  userId      String
   Task        Task[]
 }
 

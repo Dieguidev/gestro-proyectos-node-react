@@ -24,6 +24,7 @@ export class AuthRoutes {
 
     router.post('/login', controller.loginUser);
     router.post('/register', controller.registerUser);
+    //TODO: Trasladar esta ruta u servicio a un controlador de usuarios
     router.delete(
       '/:id',
       [AuthMiddleware.isAdminRoleOrSameUser],

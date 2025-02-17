@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import { AddTeamMemberDto, CreateProjectDto, CustomError, DeleteProjectDto, FindMemberByEmailDto, GetByIdProjectDto, PaginationDto, UpdateProjectDto } from "../../domain";
 import { ProjectService } from "../services/project.service";
+import { ProjectServicePrisma } from "../services/project.service-prisma";
 
 
 
 export class ProjectController {
   constructor(
-    private readonly projectService: ProjectService
+    private readonly projectService: ProjectService,
+    private readonly projectServicePrimsa: ProjectServicePrisma
   ) { }
 
   private handleError = (error: unknown, res: Response) => {
