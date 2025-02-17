@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import {
-  CheckPasswordDto,
   ConfirmTokenDto,
   CustomError,
   ForgotPasswordDto,
@@ -8,9 +7,7 @@ import {
   LoginUserDto,
   RegisterUserDto,
   RequestConfirmationCodeDto,
-  UpdateCurrentUserPasswordDto,
   UpdatePasswordDto,
-  UpdateUserDto,
 } from '../../domain';
 
 import { AuthService } from '../services/auth.service';

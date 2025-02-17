@@ -1,10 +1,10 @@
-import { startSession } from 'mongoose';
+
 import { BcryptAdapter, envs, JwtAdapter } from '../../config';
-import { SixDigitsTokenModel } from '../../data/mongodb/models/sixDigitsToken';
-import { IUser, UserModel } from '../../data/mongodb/models/user.model';
+
+import { UserModel } from '../../data/mongodb/models/user.model';
 
 import {
-  CheckPasswordDto,
+
   ConfirmTokenDto,
   CustomError,
   generateSixDigitToken,
@@ -13,10 +13,8 @@ import {
   LoginUserDto,
   RegisterUserDto,
   RequestConfirmationCodeDto,
-  UpdateCurrentUserPasswordDto,
+
   UpdatePasswordDto,
-  UpdateUserDto,
-  UserEntity,
 } from '../../domain';
 import { EmailService } from './email.service';
 import { prisma } from '../../data/prisma/prisma-db';
