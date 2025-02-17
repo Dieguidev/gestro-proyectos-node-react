@@ -25,12 +25,12 @@ export class ProjectRoutes {
     router.get('/:projectId', controller.getProjectById);
     router.put(
       '/:projectId',
-      [ValidateTaskMiddleware.hasAuthorization],
+      [ValidateProjectMiddleware.hasAuthorization],
       controller.updateProject
     );
     router.delete(
       '/:projectId',
-      [ValidateTaskMiddleware.hasAuthorization],
+      [ValidateProjectMiddleware.hasAuthorization],
       controller.deleteProject
     );
 

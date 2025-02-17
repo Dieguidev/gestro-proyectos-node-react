@@ -17,15 +17,15 @@ export class TaskRoutes {
 
     router.param('projectId', ValidateProjectMiddleware.validateProjectExists);
 
-    router.post('/:projectId', [ValidateTaskMiddleware.hasAuthorization], controller.createTask);
+    router.post('/:projectId', [ValidateProjectMiddleware.hasAuthorization], controller.createTask);
     router.get('/:projectId', controller.getTasksByProjectId);
 
     router.param('taskId', ValidateTaskMiddleware.validateTaskExists);
     router.param('taskId', ValidateTaskMiddleware.taskBelongsToProject);
 
     router.get('/:projectId/task/:taskId', controller.getTaskById);
-    router.put('/:projectId/task/:taskId', [ValidateTaskMiddleware.hasAuthorization], controller.updateTask);
-    router.delete('/:projectId/task/:taskId', [ValidateTaskMiddleware.hasAuthorization], controller.deleteTask);
+    router.put('/:projectId/task/:taskId', [ValidateProjectMiddleware.hasAuthorization], controller.updateTask);
+    router.delete('/:projectId/task/:taskId', [ValidateProjectMiddleware.hasAuthorization], controller.deleteTask);
     router.post('/:projectId/task/:taskId/status', controller.updateTaskStatus);
 
 

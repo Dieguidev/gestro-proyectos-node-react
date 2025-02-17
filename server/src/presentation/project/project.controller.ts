@@ -74,8 +74,8 @@ export class ProjectController {
   };
 
   deleteProject = (req: Request, res: Response) => {
-    this.projectService
-      .deleteProject(req.project!)
+    this.projectServicePrimsa
+      .deleteProject(req.project?.id!)
       .then((rpta) => res.json(rpta))
       .catch((error) => this.handleError(error, res));
   };

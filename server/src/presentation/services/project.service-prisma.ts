@@ -11,7 +11,7 @@ import {
 import { FindMemberByEmailDto } from '../../domain/dtos/team/find-member-by-email.dto';
 import { AddTeamMemberDto } from '../../domain/dtos/team/add-team-member.dto';
 import { prisma } from '../../data/prisma/prisma-db';
-import { User } from '@prisma/client';
+import { Project, User } from '@prisma/client';
 
 export class ProjectServicePrisma {
   async createProject(creaProjectDto: CreateProjectDto) {
@@ -136,9 +136,13 @@ export class ProjectServicePrisma {
     }
   }
 
-  async deleteProject(project: any) {
+  async deleteProject(projectId: Project['id']) {
     try {
-      await project.deleteOne();
+      await prisma.project.delete({
+        where: {
+          id: projectId,
+        },
+      });
       return 'Project deleted';
     } catch (error) {
       if (error instanceof CustomError) {

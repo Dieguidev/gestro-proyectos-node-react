@@ -60,33 +60,33 @@ export class ProjectService {
   }
 
 
-  async getProjectById(getByIdProjectDto: GetByIdProjectDto, userId: IUser['_id']) {
-    const { id } = getByIdProjectDto;
-    try {
-      const project = await ProjectModel.findById(id).populate('tasks').exec();
-      if (!project) {
-        throw CustomError.notFound('Project not found');
-      }
+  // async getProjectById(getByIdProjectDto: GetByIdProjectDto, userId: IUser['_id']) {
+  //   const { id } = getByIdProjectDto;
+  //   try {
+  //     const project = await ProjectModel.findById(id).populate('tasks').exec();
+  //     if (!project) {
+  //       throw CustomError.notFound('Project not found');
+  //     }
 
-      console.log(project.manager!, userId);
-      console.log(project.team);
+  //     console.log(project.manager!, userId);
+  //     console.log(project.team);
 
-      const projectTeamstoString = project.team.map((id: any) => id.toString());
+  //     const projectTeamstoString = project.team.map((id: any) => id.toString());
 
 
 
-      if (project.manager!.toString() !== userId && !projectTeamstoString.includes(userId)) {
-        throw CustomError.forbidden('Acción no válida');
-      }
+  //     if (project.manager!.toString() !== userId && !projectTeamstoString.includes(userId)) {
+  //       throw CustomError.forbidden('Acción no válida');
+  //     }
 
-      return { project: ProjectEntity.fromJson(project) };
-    } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServer();
-    }
-  }
+  //     return { project: ProjectEntity.fromJson(project) };
+  //   } catch (error) {
+  //     if (error instanceof CustomError) {
+  //       throw error;
+  //     }
+  //     throw CustomError.internalServer();
+  //   }
+  // }
 
   async deleteProject(project: any) {
     try {
