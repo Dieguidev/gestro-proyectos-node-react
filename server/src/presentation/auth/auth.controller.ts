@@ -2,13 +2,15 @@ import { Request, Response } from "express"
 import { CheckPasswordDto, ConfirmTokenDto, CustomError, ForgotPasswordDto, GetAndDeleteUserDto, LoginUserDto, RegisterUserDto, RequestConfirmationCodeDto, UpdateCurrentUserPasswordDto, UpdatePasswordDto, UpdateUserDto } from "../../domain"
 
 import { AuthService } from "../services/auth.service";
+import { AuthServicePrisma } from "../services/auth.service-prisma";
 
 
 
 
 export class AuthController {
   constructor(
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly authServicePrisma: AuthServicePrisma
   ) { }
 
 
@@ -27,7 +29,7 @@ export class AuthController {
     const [error, registerUserDto] = RegisterUserDto.create(req.body)
     if (error) return res.status(400).json({ error })
 
-    this.authService.registerUser(registerUserDto!)
+    this.authServicePrisma.registerUser(registerUserDto!)
       .then((user) => res.json(user))
       .catch((error) => this.handleError(error, res));
   }

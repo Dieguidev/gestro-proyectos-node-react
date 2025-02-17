@@ -16,15 +16,13 @@ export class EmailService {
   private transporter: Transporter;
 
   constructor(
-    // mailerService: string,
+    mailerService: string,
     mailerEmail: string,
     mailerSecretKey: string,
     private readonly postToProvider: boolean
   ) {
     this.transporter = nodemailer.createTransport({
-      // service: mailerService,
-      host: 'mail.dgdevperu.com', // Reemplaza con el servidor SMTP
-      port: 465, // Cambia al puerto 465
+      service: mailerService,
       secure: true,
       auth: {
         user: mailerEmail,

@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -41,6 +41,7 @@ model VerificationToken {
   expiresAt DateTime
 
   @@index([token])
+  @@index([expiresAt])
 }
 
 model TeamProject {
