@@ -93,23 +93,29 @@ export class AuthServicePrisma {
   async loginUser(loginUserDto: LoginUserDto) {
     const { email, password } = loginUserDto;
     try {
-      return await prisma.$transaction(async (prisma) => {
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-          throw CustomError.badRequest('Invalid credentials');
-        }
+      const user = await prisma.user.findUnique({
+        where: { email },
+        include: { VerificationToken: true },
+      });
+      if (!user) {
+        throw CustomError.badRequest('Invalid credentials');
+      }
 
-        const isMatchPassword = this.comparePassword(password, user.password);
-        if (!isMatchPassword) {
-          throw CustomError.badRequest('Invalid credentials');
-        }
-
-        const sixDigitsToken = generateSixDigitToken();
-
-        if (!user.confirmed) {
-          await prisma.verificationToken.update({
+      const isMatchPassword = this.comparePassword(password, user.password);
+      if (!isMatchPassword) {
+        throw CustomError.badRequest('Invalid credentials');
+      }
+      if (!user.confirmed) {
+        await prisma.$transaction(async (prisma) => {
+          const sixDigitsToken = generateSixDigitToken();
+          await prisma.verificationToken.upsert({
             where: { userId: user.id },
-            data: {
+            create: {
+              userId: user.id,
+              token: sixDigitsToken,
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+            },
+            update: {
               token: sixDigitsToken,
               expiresAt: new Date(Date.now() + 15 * 60 * 1000),
             },
@@ -120,15 +126,14 @@ export class AuthServicePrisma {
             name: user.name,
             token: sixDigitsToken,
           });
-          throw CustomError.badRequest(
-            'Unconfirmed email, email with token is sent'
-          );
-        }
+        });
+        throw CustomError.badRequest(
+          'Unconfirmed email, email with token is sent'
+        );
+      }
+      const token = await this.generateJWTTokenService(user.id);
 
-        const token = await this.generateJWTTokenService(user.id);
-
-        return LoginResponseDto.create(user, token);
-      });
+      return LoginResponseDto.create(user, token);
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -136,7 +141,6 @@ export class AuthServicePrisma {
       throw CustomError.internalServer(`${error}`);
     }
   }
-
 
   async delete(getAndDeleteUserDto: GetAndDeleteUserDto) {
     const { id } = getAndDeleteUserDto;
@@ -186,12 +190,6 @@ export class AuthServicePrisma {
       subject: 'Confirma tu cuenta',
       html,
     };
-
-    // const isSent = await this.emailservice.sendEmail(options);
-    // if (!isSent) {
-    //   throw CustomError.internalServer('Error sending email')
-    // }
-
     try {
       const isSent = await this.emailservice.sendEmail(options);
       if (!isSent) {
@@ -265,31 +263,39 @@ export class AuthServicePrisma {
   }
 
   public async confirmSixDigitToken(confirmTokenDto: ConfirmTokenDto) {
-    const session = await startSession();
+    const { token } = confirmTokenDto;
     try {
-      session.startTransaction();
-      const sixDigitTokenExists = await SixDigitsTokenModel.findOne({
-        token: confirmTokenDto.token,
+      return await prisma.$transaction(async (prisma) => {
+        const sixDigitTokenExists = await prisma.verificationToken.findFirst({
+          where: {
+            token,
+            expiresAt: {
+              gt: new Date(), // Verifica que no haya expirado
+            },
+          },
+        });
+        if (!sixDigitTokenExists) {
+          throw CustomError.badRequest('Invalid token');
+        }
+
+        const updatedUser = await prisma.user.update({
+          where: { id: sixDigitTokenExists.userId },
+          data: {
+            confirmed: true,
+            VerificationToken: {
+              update: {
+                token: '',
+              },
+            },
+          },
+        });
+
+        return {
+          user: updatedUser,
+          message: 'Cuenta confirmada exitosamente',
+        };
       });
-      if (!sixDigitTokenExists) {
-        throw CustomError.badRequest('Invalid token');
-      }
-
-      const user = await UserModel.findById(sixDigitTokenExists.user);
-      if (!user) {
-        throw CustomError.badRequest('User not found');
-      }
-      user.confirmed = true;
-      await user.save({ session });
-      await sixDigitTokenExists.deleteOne({ session });
-
-      await session.commitTransaction();
-      session.endSession();
-
-      return user;
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       console.log(error);
       if (error instanceof CustomError) {
         throw error;
