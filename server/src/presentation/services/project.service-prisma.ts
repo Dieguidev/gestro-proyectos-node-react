@@ -11,6 +11,7 @@ import {
 import { FindMemberByEmailDto } from '../../domain/dtos/team/find-member-by-email.dto';
 import { AddTeamMemberDto } from '../../domain/dtos/team/add-team-member.dto';
 import { prisma } from '../../data/prisma/prisma-db';
+import { User } from '@prisma/client';
 
 export class ProjectServicePrisma {
   async createProject(creaProjectDto: CreateProjectDto) {
@@ -28,23 +29,44 @@ export class ProjectServicePrisma {
     }
   }
 
-  async getAllProjects(paginationDto: PaginationDto, userId: IUser['_id']) {
+  //TODO: Falta verificación de proyectos donde eres miembro
+  async getAllProjects(paginationDto: PaginationDto, userId: User['id']) {
     const { page, limit } = paginationDto;
     const skip = (page - 1) * limit;
 
     try {
       const [total, projects] = await Promise.all([
-        ProjectModel.countDocuments(),
-        ProjectModel.find({
-          $or: [{ manager: { $in: userId } }, { team: { $in: userId } }],
-        })
-          .skip(skip)
-          .limit(limit),
+        prisma.project.count({
+          where: {
+            OR: [
+              { managerId: userId },
+              {
+                TeamProject: {
+                  some: {
+                    userId,
+                  },
+                },
+              },
+            ],
+          },
+        }),
+        prisma.project.findMany({
+          where: {
+            OR: [
+              { managerId: userId },
+              {
+                TeamProject: {
+                  some: {
+                    userId,
+                  },
+                },
+              },
+            ],
+          },
+          skip,
+          take: limit,
+        }),
       ]);
-
-      const listProjects: ProjectEntity[] = projects.map((project: IProject) =>
-        ProjectEntity.fromJson(project)
-      );
 
       return {
         page,
@@ -52,13 +74,11 @@ export class ProjectServicePrisma {
         total: total,
         next:
           total - page * limit > 0
-            ? `/api/categories?page=${page + 1}&limit=${limit}`
+            ? `/api/project?page=${page + 1}&limit=${limit}`
             : null,
         prev:
-          page - 1 > 0
-            ? `/api/categories?page=${page - 1}&limit=${limit}`
-            : null,
-        projects: listProjects,
+          page - 1 > 0 ? `/api/project?page=${page - 1}&limit=${limit}` : null,
+        projects,
       };
     } catch (error) {
       if (error instanceof CustomError) {
@@ -68,30 +88,46 @@ export class ProjectServicePrisma {
     }
   }
 
+  //TODO: Falta verificación de proyectos donde eres miembro
   async getProjectById(
     getByIdProjectDto: GetByIdProjectDto,
-    userId: IUser['_id']
+    userId: User['id']
   ) {
-    const { id } = getByIdProjectDto;
+    const { projectId } = getByIdProjectDto;
     try {
-      const project = await ProjectModel.findById(id).populate('tasks').exec();
+      const project = await prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+        include: {
+          TeamProject: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      });
       if (!project) {
         throw CustomError.notFound('Project not found');
       }
 
-      console.log(project.manager!, userId);
-      console.log(project.team);
-
-      const projectTeamstoString = project.team.map((id: any) => id.toString());
-
       if (
-        project.manager!.toString() !== userId &&
-        !projectTeamstoString.includes(userId)
+        project.managerId !== userId &&
+        !project.TeamProject.some((team) => team.userId === userId)
       ) {
         throw CustomError.forbidden('Acción no válida');
       }
 
-      return { project: ProjectEntity.fromJson(project) };
+      // const projectTeamstoString = project.team.map((id: any) => id.toString());
+
+      // if (
+      //   project.manager!.toString() !== userId &&
+      //   !projectTeamstoString.includes(userId)
+      // ) {
+      //   throw CustomError.forbidden('Acción no válida');
+      // }
+
+      return { project };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;

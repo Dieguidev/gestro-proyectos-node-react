@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import { validate as uuidValidate } from 'uuid';
 
 export class Validators {
 
@@ -10,5 +10,9 @@ export class Validators {
 
   static isMongoID(id: string) {
     return mongoose.isValidObjectId(id);
+  }
+
+  static isUUID(uuid: string) {
+    return uuidValidate(uuid);
   }
 }

@@ -22,7 +22,7 @@ export class ProjectRoutes {
 
     router.post('/', controller.createProject);
     router.get('/', controller.getAllProjects);
-    router.get('/:id', controller.getProjectById);
+    router.get('/:projectId', controller.getProjectById);
     router.put(
       '/:projectId',
       [ValidateTaskMiddleware.hasAuthorization],
