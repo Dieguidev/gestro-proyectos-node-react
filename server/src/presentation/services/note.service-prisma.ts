@@ -3,7 +3,8 @@ import { NoteModel } from '../../data/mongodb/models/notes.model';
 import { CreateNoteDto, CustomError } from '../../domain';
 import { NoteParams } from '../notes/note.controller';
 import { prisma } from '../../data/prisma/prisma-db';
-import { Task, User } from '@prisma/client';
+import { Note, Task, User } from '@prisma/client';
+import { Validators } from '../../config';
 
 export class NoteServicePrisma {
   async createNote(
@@ -38,7 +39,7 @@ export class NoteServicePrisma {
         where: {
           taskId,
         },
-      })
+      });
       return notes;
     } catch (error) {
       if (error instanceof CustomError) {
@@ -49,36 +50,40 @@ export class NoteServicePrisma {
     }
   }
 
-  async deleteNoteById(noteId: NoteParams['noteId'], user: any, task: any) {
-    const session = await startSession();
+  async deleteNoteById(noteId: Note['id'], userId: User['id']) {
+    console.log(noteId);
     try {
-      session.startTransaction();
-      const note = await NoteModel.findById(noteId);
+      //TODO: Implementar un middleware para validar el id de la nota y su existencia
+      if(!Validators.isUUID(noteId)) {
+        throw CustomError.badRequest('El id de la nota no es válido');
+      }
+      console.log('aqui');
+
+      const note = await prisma.note.findUnique({
+        where: {
+          id: noteId,
+        },
+      });
       if (!note) {
         throw CustomError.notFound('Nota no encontrada');
       }
 
-      if (note.createdBy.toString() !== user.id) {
+      if (note.userId !== userId) {
         throw CustomError.unauthorized('Acción no válida');
       }
 
-      task.notes = task.notes.filter(
-        (note: any) => note.toString() !== noteId.toString()
-      );
-      await task.save();
-
-      await note.deleteOne();
-
-      await session.commitTransaction();
-      session.endSession();
+      await prisma.note.delete({
+        where: {
+          id: noteId,
+        },
+      });
 
       return 'Nota eliminada correctamente';
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
       throw CustomError.internalServer();
     }
   }

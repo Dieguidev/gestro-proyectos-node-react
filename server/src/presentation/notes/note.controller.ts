@@ -41,10 +41,11 @@ export class NoteController {
       .catch((error) => this.handleError(error, res));
   };
 
-  deleteNoteById = (req: Request<NoteParams>, res: Response) => {
+  deleteNoteById = (req: Request, res: Response) => {
     const { noteId } = req.params;
-    this.noteService
-      .deleteNoteById(noteId, req.user!, req.task!)
+
+    this.noteServicePrisma
+      .deleteNoteById(noteId, req.userPrisma!.id)
       .then((response) => res.json(response))
       .catch((error) => this.handleError(error, res));
   };
