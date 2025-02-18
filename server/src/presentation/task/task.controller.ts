@@ -30,8 +30,8 @@ export class TaskController {
   };
 
   getTasksByProjectId = (req: Request, res: Response) => {
-    this.taskService
-      .getTasksByProjectId(req.project)
+    this.taskServicePrisma
+      .getTasksByProjectId(req.project!.id)
       .then((tasks) => res.json(tasks))
       .catch((error) => this.handleError(error, res));
   };

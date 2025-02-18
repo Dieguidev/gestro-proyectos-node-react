@@ -32,17 +32,36 @@ export class TaskServicePrisma {
     }
   }
 
-  async getTasksByProjectId(project: any) {
+  async getTasksByProjectId(projectId: Project['id']) {
     try {
-      const tasks = await project.populate({
-        path: 'tasks',
+      // const tasks = await project.populate({
+      //   path: 'tasks',
+      // });
+
+      const tasks = await prisma.task.findMany({
+        where: {
+          projectId
+        },
+        include: {
+          completedBy: {
+            include: {
+              user: true,
+            },
+          },
+          notes: {
+            include: {
+              createdBy: true,
+            },
+          },
+        },
       });
 
-      return tasks.tasks.map((task: any) => TaskEntity.fromJson(task));
+      return {tasks}
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
       throw CustomError.internalServer();
     }
   }
