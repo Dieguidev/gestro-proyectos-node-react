@@ -3,7 +3,6 @@ import {
   AddTeamMemberDto,
   CreateProjectDto,
   CustomError,
-  DeleteProjectDto,
   FindMemberByEmailDto,
   GetByIdProjectDto,
   PaginationDto,

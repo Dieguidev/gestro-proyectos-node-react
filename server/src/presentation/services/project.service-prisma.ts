@@ -1,10 +1,8 @@
 import {
   CreateProjectDto,
   CustomError,
-  DeleteProjectDto,
   GetByIdProjectDto,
   PaginationDto,
-  ProjectEntity,
   UpdateProjectDto,
 } from '../../domain';
 import { FindMemberByEmailDto } from '../../domain/dtos/team/find-member-by-email.dto';
