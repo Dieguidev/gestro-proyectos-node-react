@@ -126,7 +126,7 @@ export class AuthServicePrisma {
           });
         });
         throw CustomError.badRequest(
-          'Unconfirmed email, email with token is sent'
+          'Correo electrónico no confirmado, se envía correo electrónico para confirmación'
         );
       }
       const token = await this.generateJWTTokenService(user.id);
