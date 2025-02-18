@@ -13,12 +13,11 @@ export class TaskRoutes {
     const taskService = new TaskService();
     const taskservicePrisma = new TaskServicePrisma();
     const controller = new TaskController(taskService, taskservicePrisma);
+
     router.use(AuthMiddleware.validateJWT);
 
     router.param('projectId', ValidateProjectMiddleware.validateProjectExists);
-
     router.param('taskId', ValidateTaskMiddleware.validateTaskExists);
-    router.param('taskId', ValidateTaskMiddleware.taskBelongsToProject);
 
     router.post(
       '/:projectId',
@@ -27,18 +26,35 @@ export class TaskRoutes {
     );
     router.get('/:projectId', controller.getTasksByProjectId);
 
-    router.get('/:projectId/task/:taskId', controller.getTaskById);
+    router.get(
+      '/:taskId/project/:projectId',
+      [ValidateTaskMiddleware.taskBelongsToProject],
+      controller.getTaskById
+    );
     router.put(
       '/:projectId/task/:taskId',
-      [ValidateProjectMiddleware.hasAuthorization],
+      [
+        ValidateProjectMiddleware.hasAuthorization,
+        ValidateTaskMiddleware.taskBelongsToProject,
+      ],
       controller.updateTask
     );
     router.delete(
       '/:projectId/task/:taskId',
-      [ValidateProjectMiddleware.hasAuthorization],
+      [
+        ValidateProjectMiddleware.hasAuthorization,
+        ValidateTaskMiddleware.taskBelongsToProject,
+      ],
       controller.deleteTask
     );
-    router.post('/:projectId/task/:taskId/status', controller.updateTaskStatus);
+    router.post(
+      '/:projectId/task/:taskId/status',
+      [
+        ValidateProjectMiddleware.hasAuthorization,
+        ValidateTaskMiddleware.taskBelongsToProject,
+      ],
+      controller.updateTaskStatus
+    );
 
     return router;
   }

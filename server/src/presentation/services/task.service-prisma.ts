@@ -7,7 +7,7 @@ import {
   TaskEntity,
   UpdateTaskDto,
 } from '../../domain';
-import { Project } from '@prisma/client';
+import { Project, Task } from '@prisma/client';
 import { prisma } from '../../data/prisma/prisma-db';
 
 export class TaskServicePrisma {
@@ -68,19 +68,39 @@ export class TaskServicePrisma {
     }
   }
 
-  async getTaskById(task: any) {
+  async getTaskById(taskId: Task['id']) {
     try {
-      const taskDetails = await TaskModel.findById(task.id)
-        .populate({
-          path: 'completedBy.user',
-          select: 'id name email',
-        })
-        .populate({
-          path: 'notes',
-          populate: { path: 'createdBy', select: 'id name email' },
-        });
+      const taskDetails = await prisma.task.findUnique({
+        where: {
+          id: taskId,
+        },
+        include: {
+          completedBy: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          notes: {
+            include: {
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      });
 
-      return TaskEntity.fromJson(taskDetails as any);
+      return { task: taskDetails };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;

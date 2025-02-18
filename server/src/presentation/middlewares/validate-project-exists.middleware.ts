@@ -19,19 +19,25 @@ export class ValidateProjectMiddleware {
     next: NextFunction
   ) {
     const { projectId } = req.params;
+
     if (!Validators.isUUID(projectId)) {
       return res.status(400).json({ error: 'Invalid project id' });
     }
-    const project = await prisma.project.findUnique({
-      where: {
-        id: projectId,
-      },
-    });
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
+    try {
+      const project = await prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+      });
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      req.project = project;
+      next();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: 'Internal server error' });
     }
-    req.project = project;
-    next();
   }
 
   static async hasAuthorization(
