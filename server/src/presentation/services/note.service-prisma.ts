@@ -28,19 +28,23 @@ export class NoteServicePrisma {
         throw error;
       }
       console.log(`${error}`);
-
       throw CustomError.internalServer();
     }
   }
 
-  async getNotesByTask(task: any) {
+  async getNotesByTask(taskId: Task['id']) {
     try {
-      const notes = await NoteModel.find({ task: task.id });
+      const notes = await prisma.note.findMany({
+        where: {
+          taskId,
+        },
+      })
       return notes;
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
       throw CustomError.internalServer();
     }
   }
