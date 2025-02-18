@@ -3,6 +3,7 @@ import { CreateNoteDto, CustomError } from "../../domain";
 import { NoteService } from "../services/note.service";
 import { INote } from '../../data/mongodb/models/notes.model';
 import { Types } from "mongoose";
+import { NoteServicePrisma } from "../services/note.service-prisma";
 
 export type NoteParams = {
   noteId: Types.ObjectId
@@ -10,7 +11,9 @@ export type NoteParams = {
 
 export class NoteController {
   constructor(
-    private readonly noteService: NoteService
+    private readonly noteService: NoteService,
+    private readonly noteServicePrisma: NoteServicePrisma
+
   ) { }
 
   private handleError = (error: unknown, res: Response) => {
@@ -27,7 +30,7 @@ export class NoteController {
     const [error, createNoteDto] = CreateNoteDto.create(req.body)
     if (error) return res.status(400).json({ error })
 
-    this.noteService.createNote(createNoteDto!, req.task!, req.user!)
+    this.noteServicePrisma.createNote(createNoteDto!, req.task!.id, req.userPrisma!.id)
       .then(note => res.json(note))
       .catch(error => this.handleError(error, res));
   }

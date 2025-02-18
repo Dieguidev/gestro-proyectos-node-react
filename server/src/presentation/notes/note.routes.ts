@@ -4,12 +4,14 @@ import { NoteController } from "./note.controller";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { ValidateProjectMiddleware } from "../middlewares/validate-project-exists.middleware";
 import { ValidateTaskMiddleware } from "../middlewares/validate-task.middleware";
+import { NoteServicePrisma } from "../services/note.service-prisma";
 
 export class NoteRoutes {
   static get routes(): Router {
     const router = Router();
     const noteService = new NoteService();
-    const controller = new NoteController(noteService);
+    const noteServicePrisma = new NoteServicePrisma();
+    const controller = new NoteController(noteService, noteServicePrisma);
 
     router.use(AuthMiddleware.validateJWT)
     router.param('projectId', ValidateProjectMiddleware.validateProjectExists);
