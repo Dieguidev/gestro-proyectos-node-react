@@ -2,15 +2,12 @@ import { Request, Response } from 'express';
 import {
   ConfirmTokenDto,
   CustomError,
-  ForgotPasswordDto,
-  GetAndDeleteUserDto,
-  LoginUserDto,
+  ForgotPasswordDto, LoginUserDto,
   RegisterUserDto,
   RequestConfirmationCodeDto,
-  UpdatePasswordDto,
+  UpdatePasswordDto
 } from '../../domain';
 
-import { AuthService } from '../services/auth.service';
 import { AuthServicePrisma } from '../services/auth.service-prisma';
 
 export class AuthController {
