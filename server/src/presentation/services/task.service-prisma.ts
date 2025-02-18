@@ -109,25 +109,33 @@ export class TaskServicePrisma {
     }
   }
 
-  async updateTask(updateTaskdto: UpdateTaskDto, task: any) {
+  async updateTask(updateTaskdto: UpdateTaskDto, taskId: Task['id']) {
     const { name, description } = updateTaskdto;
     try {
       if (name === undefined && description === undefined) {
         throw CustomError.badRequest('No data to update');
       }
-      if (name !== undefined) {
-        task.name = name;
-      }
-      if (description !== undefined) {
-        task.description = description;
-      }
-      await task.save();
 
-      return TaskEntity.fromJson(task);
+      console.log('updateTaskdto', updateTaskdto);
+
+
+      const task = await prisma.task.update({
+        where: {
+          id: taskId,
+        },
+        data: {
+          name,
+          description,
+        },
+      });
+
+      return 'tarea actualizado correctamente';
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
+
       throw CustomError.internalServer();
     }
   }

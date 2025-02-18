@@ -32,7 +32,7 @@ export class TaskRoutes {
       controller.getTaskById
     );
     router.put(
-      '/:projectId/task/:taskId',
+      '/:taskId/project/:projectId',
       [
         ValidateProjectMiddleware.hasAuthorization,
         ValidateTaskMiddleware.taskBelongsToProject,

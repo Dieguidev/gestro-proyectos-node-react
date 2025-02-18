@@ -49,8 +49,8 @@ export class TaskController {
     const [error, updateTaskDto] = UpdateTaskDto.create({ name, description });
     if (error) return res.status(400).json({ error });
 
-    this.taskService
-      .updateTask(updateTaskDto!, req.task)
+    this.taskServicePrisma
+      .updateTask(updateTaskDto!, req.task!.id)
       .then((task) => res.json(task))
       .catch((error) => this.handleError(error, res));
   };
