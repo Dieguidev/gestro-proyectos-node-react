@@ -2,7 +2,12 @@ import { PrismaClient } from '@prisma/client';
 import colors from 'colors';
 
 export const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
+  log: [
+    // 'query',
+    'info',
+    'warn',
+    'error',
+  ],
 });
 
 export class Database {
