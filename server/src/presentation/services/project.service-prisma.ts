@@ -294,11 +294,27 @@ export class ProjectServicePrisma {
     }
   }
 
-  async getMembers(project: any) {
-    const members = await project.populate({
-      path: 'team',
-      select: 'id name email',
+
+  async getMembers(project: Project['id']) {
+    const members = await prisma.project.findUnique({
+      where: {
+        id: project,
+      },
+      include: {
+        TeamProject: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          }
+        }
+      }
     });
-    return members.team;
+
+    return members?.TeamProject;
   }
 }

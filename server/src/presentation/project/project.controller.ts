@@ -111,8 +111,8 @@ export class ProjectController {
   };
 
   getMembers = (req: Request, res: Response) => {
-    this.projectService
-      .getMembers(req.project!)
+    this.projectServicePrimsa
+      .getMembers(req.project!.id)
       .then((members) => res.json(members))
       .catch((error) => this.handleError(error, res));
   };
