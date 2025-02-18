@@ -1,10 +1,8 @@
-
 import { BcryptAdapter, envs, JwtAdapter } from '../../config';
 
 import { UserModel } from '../../data/mongodb/models/user.model';
 
 import {
-
   ConfirmTokenDto,
   CustomError,
   generateSixDigitToken,
@@ -13,7 +11,6 @@ import {
   LoginUserDto,
   RegisterUserDto,
   RequestConfirmationCodeDto,
-
   UpdatePasswordDto,
 } from '../../domain';
 import { EmailService } from './email.service';
@@ -34,7 +31,7 @@ export class AuthServicePrisma {
 
   async registerUser(
     registerUserDto: RegisterUserDto
-  ): Promise<UserResponseDto> {
+  ) {
     const { password, email, name } = registerUserDto;
 
     try {
@@ -47,7 +44,7 @@ export class AuthServicePrisma {
         });
 
         if (existUser) {
-          throw CustomError.badRequest('User already exist');
+          throw CustomError.badRequest('Utiliza otro email');
         }
 
         const sixDigitsToken = generateSixDigitToken();
@@ -64,7 +61,6 @@ export class AuthServicePrisma {
             },
           },
         });
-        console.log(user);
 
         try {
           await this.sendEmailValidationSixdigitToken({
@@ -78,7 +74,9 @@ export class AuthServicePrisma {
           throw new Error('Failed to complete registration process');
         }
 
-        return UserResponseDto.create(user);
+        return {
+          message: "Usuario creado, se envía correo electrónico para confirmación",
+        };
       });
     } catch (error) {
       if (error instanceof CustomError) {
@@ -93,7 +91,6 @@ export class AuthServicePrisma {
     try {
       const user = await prisma.user.findUnique({
         where: { email },
-        include: { VerificationToken: true },
       });
       if (!user) {
         throw CustomError.badRequest('Credenciales Inválidas');
@@ -131,7 +128,10 @@ export class AuthServicePrisma {
       }
       const token = await this.generateJWTTokenService(user.id);
 
-      return LoginResponseDto.create(user, token);
+      return {
+        message: 'Bienvenido',
+        token
+      };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
