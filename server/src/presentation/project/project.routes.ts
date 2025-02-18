@@ -10,12 +10,8 @@ export class ProjectRoutes {
   static get routes(): Router {
     const router = Router();
 
-    const projectService = new ProjectService();
     const projectServicePrisma = new ProjectServicePrisma();
-    const controller = new ProjectController(
-      projectService,
-      projectServicePrisma
-    );
+    const controller = new ProjectController(projectServicePrisma);
 
     router.use(AuthMiddleware.validateJWT);
     router.param('projectId', ValidateProjectMiddleware.validateProjectExists);

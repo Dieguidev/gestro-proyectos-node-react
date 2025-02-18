@@ -17,19 +17,18 @@ export class AuthRoutes {
       envs.SEND_EMAIL
     );
 
-    const authService = new AuthService(emailService);
     const authServicePrisma = new AuthServicePrisma(emailService);
 
-    const controller = new AuthController(authService, authServicePrisma);
+    const controller = new AuthController(authServicePrisma);
 
     router.post('/login', controller.loginUser);
     router.post('/register', controller.registerUser);
     //TODO: Trasladar esta ruta u servicio a un controlador de usuarios
-    router.delete(
-      '/:id',
-      [AuthMiddleware.isAdminRoleOrSameUser],
-      controller.deleteUser
-    );
+    // router.delete(
+    //   '/:id',
+    //   [AuthMiddleware.isAdminRoleOrSameUser],
+    //   controller.deleteUser
+    // );
     router.post('/confirm-account', controller.confirmAccount);
     router.post(
       '/request-confirmation-code',

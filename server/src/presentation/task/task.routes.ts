@@ -10,9 +10,8 @@ export class TaskRoutes {
   static get routes(): Router {
     const router = Router();
 
-    const taskService = new TaskService();
     const taskservicePrisma = new TaskServicePrisma();
-    const controller = new TaskController(taskService, taskservicePrisma);
+    const controller = new TaskController(taskservicePrisma);
 
     router.use(AuthMiddleware.validateJWT);
 

@@ -5,7 +5,6 @@ import { TaskServicePrisma } from '../services/task.service-prisma';
 
 export class TaskController {
   constructor(
-    private readonly taskService: TaskService,
     private readonly taskServicePrisma: TaskServicePrisma
   ) {}
 

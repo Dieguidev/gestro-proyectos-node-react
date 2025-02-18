@@ -15,7 +15,6 @@ import { AuthServicePrisma } from '../services/auth.service-prisma';
 
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
     private readonly authServicePrisma: AuthServicePrisma
   ) {}
 
@@ -49,16 +48,16 @@ export class AuthController {
       .catch((error) => this.handleError(error, res));
   };
 
-  deleteUser = (req: Request, res: Response) => {
-    const { id } = req.params;
-    const [error, getAndDeleteUserDto] = GetAndDeleteUserDto.create({ id });
-    if (error) return res.status(400).json({ error });
+  // deleteUser = (req: Request, res: Response) => {
+  //   const { id } = req.params;
+  //   const [error, getAndDeleteUserDto] = GetAndDeleteUserDto.create({ id });
+  //   if (error) return res.status(400).json({ error });
 
-    this.authService
-      .delete(getAndDeleteUserDto!)
-      .then((user) => res.json(user))
-      .catch((error) => this.handleError(error, res));
-  };
+  //   this.authService
+  //     .delete(getAndDeleteUserDto!)
+  //     .then((user) => res.json(user))
+  //     .catch((error) => this.handleError(error, res));
+  // };
 
   confirmAccount = (req: Request, res: Response) => {
     const [error, confirmTokenDto] = ConfirmTokenDto.create(req.body);

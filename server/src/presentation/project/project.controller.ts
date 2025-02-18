@@ -13,7 +13,6 @@ import { ProjectServicePrisma } from '../services/project.service-prisma';
 
 export class ProjectController {
   constructor(
-    private readonly projectService: ProjectService,
     private readonly projectServicePrimsa: ProjectServicePrisma
   ) {}
 

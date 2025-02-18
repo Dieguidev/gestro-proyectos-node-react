@@ -10,7 +10,6 @@ export type NoteParams = {
 
 export class NoteController {
   constructor(
-    private readonly noteService: NoteService,
     private readonly noteServicePrisma: NoteServicePrisma
   ) {}
 
