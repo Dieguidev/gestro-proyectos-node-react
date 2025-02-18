@@ -63,12 +63,12 @@ export class AuthMiddleware {
   }
 
   static async isAdminRole(req: Request, res: Response, next: NextFunction) {
-    if (!req.body.user) {
+    if (!req.body.userPrisma) {
       return res.status(500).json({
         msg: 'Se quiere verificar el role sin validar el token primero',
       });
     }
-    const user = req.body.user;
+    const user = req.body.userPrisma;
 
     if (user.role[0] !== 'ADMIN_ROLE') {
       return res.status(401).json({

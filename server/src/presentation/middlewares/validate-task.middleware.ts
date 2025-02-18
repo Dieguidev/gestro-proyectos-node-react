@@ -1,12 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import { Validators } from '../../config';
 import { prisma } from '../../data/prisma/prisma-db';
-import { Task } from '@prisma/client';
 
 declare global {
   namespace Express {
     interface Request {
-      task?: Task;
+      task?: { projectId: string; id: string };
     }
   }
 }
@@ -22,16 +21,25 @@ export class ValidateTaskMiddleware {
     if (!Validators.isUUID(taskId)) {
       return res.status(400).json({ error: 'Invalid task id' });
     }
-    const task = await prisma.task.findUnique({
-      where: {
-        id: taskId,
-      },
-    });
-    if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
+    try {
+      const task = await prisma.task.findUnique({
+        where: {
+          id: taskId,
+        },
+        select: {
+          projectId: true,
+          id: true,
+        },
+      });
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      req.task = task;
+      next();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: 'Internal server error' });
     }
-    req.task = task;
-    next();
   }
 
   static async taskBelongsToProject(
@@ -39,11 +47,13 @@ export class ValidateTaskMiddleware {
     res: Response,
     next: NextFunction
   ) {
+    if (!req.task || !req.project) {
+      return res.status(500).json({
+        msg: 'Se quiere verificar la tarea sin validar el proyecto primero',
+      });
+    }
     const { task, project } = req;
-    console.log('task', task);
-    console.log('project', project);
-
-    if (task!.projectId !== project!.id) {
+    if (task.projectId !== project.id) {
       return res
         .status(403)
         .json({ error: 'You are not allowed to access this task' });
