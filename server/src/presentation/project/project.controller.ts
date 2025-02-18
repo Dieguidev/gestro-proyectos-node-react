@@ -104,8 +104,8 @@ export class ProjectController {
     const [error, addTeamMemberDto] = AddTeamMemberDto.create({ userId });
     if (error) return res.status(400).json({ error });
 
-    this.projectService
-      .removeMemberById(addTeamMemberDto!, req.project!)
+    this.projectServicePrimsa
+      .removeMemberById(addTeamMemberDto!, req.project!.id)
       .then((member) => res.json(member))
       .catch((error) => this.handleError(error, res));
   };

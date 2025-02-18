@@ -1,4 +1,3 @@
-import { IProject, IUser, ProjectModel, UserModel } from '../../data/mongodb';
 import {
   CreateProjectDto,
   CustomError,
@@ -248,19 +247,51 @@ export class ProjectServicePrisma {
     }
   }
 
-  async removeMemberById(addTeamMemberDto: AddTeamMemberDto, project: any) {
+  async removeMemberById(
+    addTeamMemberDto: AddTeamMemberDto,
+    projectId: Project['id']
+  ) {
     const { userId } = addTeamMemberDto;
+    try {
+      const project = await prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+        include: {
+          TeamProject: {
+            where: {
+              userId,
+            },
+            select: {
+              userId: true,
+            },
+          },
+        },
+      });
 
-    if (!project.team.includes(userId)) {
-      throw CustomError.badRequest('Usuario no se encuentra en el proyecto');
+      const teamProject = project?.TeamProject.find(
+        (team) => team.userId === userId
+      );
+      if (!teamProject) {
+        throw CustomError.notFound('Usuario no se encuentra en el proyecto');
+      }
+      await prisma.teamProject.delete({
+        where: {
+          userId_projectId: {
+            projectId,
+            userId,
+          },
+        },
+      });
+
+      return 'Usuario eliminado correctamente';
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      console.log(`${error}`);
+      throw CustomError.internalServer();
     }
-
-    project.team = project.team.filter(
-      (id: string) => id.toString() !== userId.toString()
-    );
-    await project.save();
-
-    return 'Usuario eliminado correctamente';
   }
 
   async getMembers(project: any) {
