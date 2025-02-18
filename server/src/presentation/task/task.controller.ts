@@ -20,14 +20,10 @@ export class TaskController {
   };
 
   createTask = (req: Request, res: Response) => {
-    const { projectId } = req.params;
-    const [error, createTaskDto] = CreateTaskDto.create({
-      ...req.body,
-      projectId,
-    });
+    const [error, createTaskDto] = CreateTaskDto.create(req.body);
     if (error) return res.status(400).json({ error });
 
-    this.taskService
+    this.taskServicePrisma
       .createTask(createTaskDto!, req.project!.id)
       .then((task) => res.json(task))
       .catch((error) => this.handleError(error, res));
