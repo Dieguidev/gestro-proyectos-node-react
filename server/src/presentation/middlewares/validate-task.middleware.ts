@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
 import { Validators } from '../../config';
 import { prisma } from '../../data/prisma/prisma-db';
+import { TaskStatus } from '@prisma/client';
 
 declare global {
   namespace Express {
     interface Request {
-      task?: { projectId: string; id: string };
+      task?: { projectId: string; id: string, status: TaskStatus };
     }
   }
 }
@@ -29,6 +30,7 @@ export class ValidateTaskMiddleware {
         select: {
           projectId: true,
           id: true,
+          status: true,
         },
       });
       if (!task) {

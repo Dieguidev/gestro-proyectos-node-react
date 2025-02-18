@@ -7,7 +7,7 @@ import {
   TaskEntity,
   UpdateTaskDto,
 } from '../../domain';
-import { Project, Task } from '@prisma/client';
+import { Project, Task, TaskStatus, User } from '@prisma/client';
 import { prisma } from '../../data/prisma/prisma-db';
 
 export class TaskServicePrisma {
@@ -115,10 +115,6 @@ export class TaskServicePrisma {
       if (name === undefined && description === undefined) {
         throw CustomError.badRequest('No data to update');
       }
-
-      console.log('updateTaskdto', updateTaskdto);
-
-
       const task = await prisma.task.update({
         where: {
           id: taskId,
@@ -140,53 +136,72 @@ export class TaskServicePrisma {
     }
   }
 
-  async deleteTask(project: any, task: any) {
+  async deleteTask(projectId: Project['id'], taskId: Task['id']) {
     const session = await startSession();
     session.startTransaction();
     try {
-      project.tasks = project.tasks.filter(
-        (taskId: string) => taskId?.toString() !== task.id
-      );
-
-      await task.deleteOne({ session });
-      await project.save({ session });
-
-      await session.commitTransaction();
-      session.endSession();
-
-      return TaskEntity.fromJson(task);
+      await prisma.task.delete({
+        where: {
+          id: taskId,
+          projectId,
+        },
+      });
+      return 'Tarea eliminada correctamente';
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
+
       throw CustomError.internalServer();
     }
   }
 
-  async updateTaskStatus(updateTaskdto: UpdateTaskDto, task: any, user: any) {
+  async updateTaskStatus(updateTaskdto: UpdateTaskDto, task: any, userId: User['id']) {
     const { status } = updateTaskdto;
     try {
       if (status === undefined) {
         throw CustomError.badRequest('No data to update');
       }
-      task.status = status;
 
-      const data = {
-        user: user.id,
-        status,
-      };
+      if (!this.isValidTaskStatus(status)) {
+        throw CustomError.badRequest(
+          `Invalid status. Valid values are: ${Object.values(TaskStatus).join(
+            ', '
+          )}`
+        );
+      }
 
-      task.completedBy.push(data);
-      await task.save();
+      if (task.status === status) {
+        throw CustomError.badRequest('Task already has this status');
+      }
 
-      return TaskEntity.fromJson(task);
+      await prisma.task.update({
+        where: {
+          id: task.id,
+        },
+        data: {
+          status,
+          completedBy: {
+            create: {
+              userId,
+              status: task.status,
+            },
+          },
+        },
+      });
+
+      return 'actualizada correctamente';
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
       throw CustomError.internalServer();
     }
+  }
+
+  private isValidTaskStatus(status: string): status is TaskStatus {
+    return Object.values(TaskStatus).includes(status as TaskStatus);
   }
 }

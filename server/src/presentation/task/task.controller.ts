@@ -56,9 +56,9 @@ export class TaskController {
   };
 
   deleteTask = (req: Request, res: Response) => {
-    this.taskService
-      .deleteTask(req.project, req.task)
-      .then(() => res.json({ message: 'Task deleted' }))
+    this.taskServicePrisma
+      .deleteTask(req.project!.id, req.task!.id)
+      .then((resp) => res.json(resp))
       .catch((error) => this.handleError(error, res));
   };
 
@@ -66,8 +66,8 @@ export class TaskController {
     const [error, updateTaskDto] = UpdateTaskDto.create(req.body);
     if (error) return res.status(400).json({ error });
 
-    this.taskService
-      .updateTaskStatus(updateTaskDto!, req.task, req.user)
+    this.taskServicePrisma
+      .updateTaskStatus(updateTaskDto!, req.task, req.userPrisma!.id)
       .then((task) => res.json(task))
       .catch((error) => this.handleError(error, res));
   };

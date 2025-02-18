@@ -40,7 +40,7 @@ export class TaskRoutes {
       controller.updateTask
     );
     router.delete(
-      '/:projectId/task/:taskId',
+      '/:taskId/project/:projectId',
       [
         ValidateProjectMiddleware.hasAuthorization,
         ValidateTaskMiddleware.taskBelongsToProject,
@@ -48,7 +48,7 @@ export class TaskRoutes {
       controller.deleteTask
     );
     router.post(
-      '/:projectId/task/:taskId/status',
+      '/:taskId/project/:projectId/status',
       [
         ValidateProjectMiddleware.hasAuthorization,
         ValidateTaskMiddleware.taskBelongsToProject,
