@@ -17,7 +17,7 @@ export class LoginUserDto {
     if (!email) return ['Missing email'];
     if(!Validators.email.test(email)) return ['Invalid email'];
     if (!password) return ['Missing password'];
-    if (password.length < 6) return ['Password must be at least 6 characters'];
+    if (password.length < 8) return ['El password minimo debe ser de 8 caracteres'];
 
 
     return [undefined, new LoginUserDto( email.toLowerCase(), password)];

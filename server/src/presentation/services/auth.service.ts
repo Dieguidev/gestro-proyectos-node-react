@@ -84,7 +84,7 @@ export class AuthService {
     //ismatch ..bcrypt
     const isMatchPassword = this.comparePassword(password, user.password)
     if (!isMatchPassword) {
-      throw CustomError.badRequest('Invalid credentials')
+      throw CustomError.badRequest('Credenciales Inválidas')
     }
     if (!user.confirmed) {
       const sixDigitoken = new SixDigitsTokenModel()

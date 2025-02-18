@@ -96,12 +96,12 @@ export class AuthServicePrisma {
         include: { VerificationToken: true },
       });
       if (!user) {
-        throw CustomError.badRequest('Invalid credentials');
+        throw CustomError.badRequest('Credenciales Inválidas');
       }
 
       const isMatchPassword = this.comparePassword(password, user.password);
       if (!isMatchPassword) {
-        throw CustomError.badRequest('Invalid credentials');
+        throw CustomError.badRequest('Credenciales Inválidas');
       }
       if (!user.confirmed) {
         await prisma.$transaction(async (prisma) => {
@@ -311,7 +311,7 @@ export class AuthServicePrisma {
         where: { email },
       });
       if (!user) {
-        throw CustomError.badRequest('Invalid credentials');
+        throw CustomError.badRequest('Credenciales Inválidas');
       }
 
       if (user.confirmed) {
