@@ -34,18 +34,20 @@ export class TaskServicePrisma {
 
   async getTasksByProjectId(projectId: Project['id']) {
     try {
-      // const tasks = await project.populate({
-      //   path: 'tasks',
-      // });
-
       const tasks = await prisma.task.findMany({
         where: {
-          projectId
+          projectId,
         },
         include: {
           completedBy: {
             include: {
-              user: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
           notes: {
@@ -56,7 +58,7 @@ export class TaskServicePrisma {
         },
       });
 
-      return {tasks}
+      return { tasks };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
