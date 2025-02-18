@@ -157,6 +157,7 @@ export class TaskServicePrisma {
     }
   }
 
+  //TODO: Falta verificar si un miembro del equipo puede realizar esta operacion(middleware para validar si el usuario pertenece al proyecto)
   async updateTaskStatus(updateTaskdto: UpdateTaskDto, task: any, userId: User['id']) {
     const { status } = updateTaskdto;
     try {

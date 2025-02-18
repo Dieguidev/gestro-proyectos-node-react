@@ -50,7 +50,7 @@ export class TaskRoutes {
     router.post(
       '/:taskId/project/:projectId/status',
       [
-        ValidateProjectMiddleware.hasAuthorization,
+        // ValidateProjectMiddleware.hasAuthorization,
         ValidateTaskMiddleware.taskBelongsToProject,
       ],
       controller.updateTaskStatus
