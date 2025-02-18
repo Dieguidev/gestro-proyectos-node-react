@@ -29,55 +29,60 @@ export class AuthServicePrisma {
     private readonly comparePassword: ConpareFunction = BcryptAdapter.compare
   ) {}
 
-  async registerUser(
-    registerUserDto: RegisterUserDto
-  ) {
+  async registerUser(registerUserDto: RegisterUserDto) {
     const { password, email, name } = registerUserDto;
 
     try {
-      return await prisma.$transaction(async (prisma) => {
-        const existUser = await prisma.user.findUnique({
-          where: {
-            email,
-          },
-          select: { id: true },
-        });
+      return await prisma.$transaction(
+        async (prisma) => {
+          const existUser = await prisma.user.findUnique({
+            where: {
+              email,
+            },
+            select: { id: true },
+          });
 
-        if (existUser) {
-          throw CustomError.badRequest('Utiliza otro email');
-        }
+          if (existUser) {
+            throw CustomError.badRequest('Utiliza otro email');
+          }
 
-        const sixDigitsToken = generateSixDigitToken();
-        const user = await prisma.user.create({
-          data: {
-            name,
-            email,
-            password: this.hashPassword(password),
-            VerificationToken: {
-              create: {
-                token: sixDigitsToken,
-                expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          const sixDigitsToken = generateSixDigitToken();
+          const user = await prisma.user.create({
+            data: {
+              name,
+              email,
+              password: this.hashPassword(password),
+              VerificationToken: {
+                create: {
+                  token: sixDigitsToken,
+                  expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+                },
               },
             },
-          },
-        });
-
-        try {
-          await this.sendEmailValidationSixdigitToken({
-            email: user.email,
-            name: user.name,
-            token: sixDigitsToken,
-          }).catch((error) => {
-            console.error('Email sending failed:', error);
           });
-        } catch (error) {
-          throw new Error('Failed to complete registration process');
-        }
 
-        return {
-          message: "Usuario creado, se envía correo electrónico para confirmación",
-        };
-      });
+          try {
+            await this.sendEmailValidationSixdigitToken({
+              email: user.email,
+              name: user.name,
+              token: sixDigitsToken,
+            }).catch((error) => {
+              console.error('Email sending failed:', error);
+            });
+          } catch (error) {
+            throw new Error('Failed to complete registration process');
+          }
+
+          return {
+            message:
+              'Usuario creado, se envía correo electrónico para confirmación',
+          };
+        },
+        {
+          timeout: 15000,
+          maxWait: 20000,
+        }
+      );
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -101,36 +106,41 @@ export class AuthServicePrisma {
         throw CustomError.badRequest('Credenciales Inválidas');
       }
       if (!user.confirmed) {
-        await prisma.$transaction(async (prisma) => {
-          const sixDigitsToken = generateSixDigitToken();
-          await prisma.verificationToken.upsert({
-            where: { userId: user.id },
-            create: {
-              userId: user.id,
-              token: sixDigitsToken,
-              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-            },
-            update: {
-              token: sixDigitsToken,
-              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-            },
-          });
+        await prisma.$transaction(
+          async (prisma) => {
+            const sixDigitsToken = generateSixDigitToken();
+            await prisma.verificationToken.upsert({
+              where: { userId: user.id },
+              create: {
+                userId: user.id,
+                token: sixDigitsToken,
+                expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+              },
+              update: {
+                token: sixDigitsToken,
+                expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+              },
+            });
 
-          await this.sendEmailValidationSixdigitToken({
-            email: user.email,
-            name: user.name,
-            token: sixDigitsToken,
-          });
-        });
+            await this.sendEmailValidationSixdigitToken({
+              email: user.email,
+              name: user.name,
+              token: sixDigitsToken,
+            });
+          },
+          {
+            timeout: 15000,
+            maxWait: 20000,
+          }
+        );
         throw CustomError.badRequest(
           'Correo electrónico no confirmado, se envía correo electrónico para confirmación'
         );
       }
-      const token = await this.generateJWTTokenService(user.id);
+      // const token = await this.generateJWTTokenService(user.id);
 
       return {
         message: 'Bienvenido',
-        token
       };
     } catch (error) {
       if (error instanceof CustomError) {
@@ -241,7 +251,7 @@ export class AuthServicePrisma {
   public async validateEmail(token: string) {
     const payload = await JwtAdapter.validateToken(token);
     if (!payload) {
-      throw CustomError.unauthorized('Invalid token');
+      throw CustomError.unauthorized('Token Inválido');
     }
 
     const { email } = payload as { email: string };
@@ -273,10 +283,10 @@ export class AuthServicePrisma {
           },
         });
         if (!sixDigitTokenExists) {
-          throw CustomError.badRequest('Invalid token');
+          throw CustomError.badRequest('Token inválido');
         }
 
-        const updatedUser = await prisma.user.update({
+        await prisma.user.update({
           where: { id: sixDigitTokenExists.userId },
           data: {
             confirmed: true,
@@ -289,7 +299,6 @@ export class AuthServicePrisma {
         });
 
         return {
-          user: updatedUser,
           message: 'Cuenta confirmada exitosamente',
         };
       });
@@ -311,11 +320,13 @@ export class AuthServicePrisma {
         where: { email },
       });
       if (!user) {
-        throw CustomError.badRequest('Credenciales Inválidas');
+        throw CustomError.badRequest('El correo electrónico no existe');
       }
 
       if (user.confirmed) {
-        throw CustomError.badRequest('User already confirmed');
+        throw CustomError.badRequest(
+          'El usuario ya esta confirmado, inicia sesión'
+        );
       }
 
       if (!user.confirmed) {
@@ -343,7 +354,7 @@ export class AuthServicePrisma {
       }
 
       return {
-        user: UserResponseDto.create(user),
+        message: 'Código enviado exitosamente, revisa tu correo',
       };
     } catch (error: any) {
       if (error instanceof CustomError) {
