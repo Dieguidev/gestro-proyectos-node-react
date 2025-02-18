@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { CreateTaskDto, CustomError, UpdateTaskDto } from '../../domain';
-import { TaskService } from '../services/task.service';
 import { TaskServicePrisma } from '../services/task.service-prisma';
 
 export class TaskController {

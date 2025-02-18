@@ -1,10 +1,8 @@
 import { Router } from 'express';
-import { AuthController } from './auth.controller';
-import { AuthMiddleware } from '../middlewares/auth.middleware';
-import { EmailService } from '../services/email.service';
 import { envs } from '../../config';
-import { AuthService } from '../services/auth.service';
 import { AuthServicePrisma } from '../services/auth.service-prisma';
+import { EmailService } from '../services/email.service';
+import { AuthController } from './auth.controller';
 
 export class AuthRoutes {
   static get routes(): Router {

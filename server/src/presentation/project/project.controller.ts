@@ -8,7 +8,6 @@ import {
   PaginationDto,
   UpdateProjectDto,
 } from '../../domain';
-import { ProjectService } from '../services/project.service';
 import { ProjectServicePrisma } from '../services/project.service-prisma';
 
 export class ProjectController {
