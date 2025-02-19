@@ -181,7 +181,8 @@ export class ProjectServicePrisma {
 
   async findMemberByEmail(
     findMemberByEmailDto: FindMemberByEmailDto,
-    managerId: User['id']
+    managerId: User['id'],
+    projectId: Project['id']
   ) {
     const { email } = findMemberByEmailDto;
     try {
@@ -189,19 +190,34 @@ export class ProjectServicePrisma {
         where: {
           email,
         },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        // select: {
+        //   id: true,
+        //   name: true,
+        //   email: true,
+        // },
+        include:{
+          TeamProject:{
+            where:{
+              projectId
+            }
+          }
+        }
       });
+
+      if (user?.TeamProject.length) {
+        throw CustomError.badRequest('Usuario ya registrado en el proyecto');
+      }
       if (!user) {
         throw CustomError.notFound('Usuario no encontrado');
       }
       if (user.id === managerId) {
         throw CustomError.badRequest('No puedes agregarte a ti mismo');
       }
-      return user;
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -330,6 +346,6 @@ export class ProjectServicePrisma {
       },
     });
 
-    return members?.TeamProject;
+    return members?.TeamProject.map((team) => team.user);
   }
 }
