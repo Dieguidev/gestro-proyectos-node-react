@@ -16,12 +16,13 @@ export class ProjectServicePrisma {
       const project = await prisma.project.create({
         data: creaProjectDto,
       });
-
       return { project };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
+
       throw CustomError.internalServer();
     }
   }
@@ -80,6 +81,7 @@ export class ProjectServicePrisma {
       if (error instanceof CustomError) {
         throw error;
       }
+      console.log(`${error}`);
       throw CustomError.internalServer();
     }
   }
@@ -100,6 +102,11 @@ export class ProjectServicePrisma {
               userId: true,
             },
           },
+          Task: {
+            select: {
+              id:true
+            }
+          }
         },
       });
       if (!project) {

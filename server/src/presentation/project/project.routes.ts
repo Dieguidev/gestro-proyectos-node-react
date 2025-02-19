@@ -1,9 +1,7 @@
 import { Router } from 'express';
-import { ProjectService } from '../services/project.service';
 import { ProjectController } from './project.controller';
 import { AuthMiddleware } from '../middlewares/auth.middleware';
 import { ValidateProjectMiddleware } from '../middlewares/validate-project-exists.middleware';
-import { ValidateTaskMiddleware } from '../middlewares/validate-task.middleware';
 import { ProjectServicePrisma } from '../services/project.service-prisma';
 
 export class ProjectRoutes {
