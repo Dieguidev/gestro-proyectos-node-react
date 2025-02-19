@@ -87,7 +87,9 @@ export class AuthServicePrisma {
       if (error instanceof CustomError) {
         throw error;
       }
-      throw CustomError.internalServer(`${error}`);
+      console.log(`${error}`);
+
+      throw CustomError.internalServer();
     }
   }
 
@@ -147,7 +149,9 @@ export class AuthServicePrisma {
       if (error instanceof CustomError) {
         throw error;
       }
-      throw CustomError.internalServer(`${error}`);
+      console.log(`${error}`);
+
+      throw CustomError.internalServer();
     }
   }
 
@@ -179,7 +183,7 @@ export class AuthServicePrisma {
   private async generateJWTTokenService(id: string) {
     const token = await JwtAdapter.generateToken({ id });
     if (!token) {
-      throw CustomError.internalServer('Error generating token');
+      throw CustomError.internalServer('Error generando token');
     }
     return token;
   }
@@ -206,7 +210,7 @@ export class AuthServicePrisma {
       }
     } catch (error: any) {
       console.log(error);
-      throw CustomError.internalServer('Error sending email 1');
+      throw CustomError.internalServer('Error enviando email');
     }
   }
 
@@ -214,7 +218,7 @@ export class AuthServicePrisma {
   private async sendEmailValidationLink(email: string) {
     const token = await JwtAdapter.generateToken({ email });
     if (!token) {
-      throw CustomError.internalServer('Error generating token');
+      throw CustomError.internalServer('Error generando token');
     }
 
     const link = `${envs.WEBSERVICE_URL}/api/auth/validate-email/${token}`;
@@ -242,7 +246,7 @@ export class AuthServicePrisma {
       }
     } catch (error: any) {
       console.log(error);
-      throw CustomError.internalServer('Error sending email 2');
+      throw CustomError.internalServer('Error enviando email');
     }
 
     return true;
@@ -257,7 +261,7 @@ export class AuthServicePrisma {
 
     const { email } = payload as { email: string };
     if (!email) {
-      throw CustomError.internalServer('Email not in token');
+      throw CustomError.internalServer('Error obteniendo email');
     }
 
     const user = await UserModel.findOne({ email });
@@ -308,7 +312,9 @@ export class AuthServicePrisma {
       if (error instanceof CustomError) {
         throw error;
       }
-      throw CustomError.internalServer(`${error}`);
+      console.log(`${error}`);
+
+      throw CustomError.internalServer();
     }
   }
 
@@ -361,7 +367,9 @@ export class AuthServicePrisma {
       if (error instanceof CustomError) {
         throw error;
       }
-      throw CustomError.internalServer(`${error}`);
+      console.log(`${error}`);
+
+      throw CustomError.internalServer();
     }
   }
 
@@ -444,7 +452,7 @@ export class AuthServicePrisma {
         throw new Error('Error sending email');
       }
     } catch (error: any) {
-      throw CustomError.internalServer('Error sending email');
+      throw CustomError.internalServer('Error enviando email');
     }
   }
 
@@ -456,32 +464,30 @@ export class AuthServicePrisma {
       });
 
       if (!sixDigitTokenExists) {
-        throw CustomError.badRequest('Invalid token');
+        throw CustomError.badRequest('Token inválido');
       }
 
       return 'token valido, Define tu nuevo password';
     } catch (error) {
-      console.log(error);
       if (error instanceof CustomError) {
         throw error;
       }
-      throw CustomError.internalServer(`${error}`);
+      console.log(`${error}`);
+      throw CustomError.internalServer();
     }
   }
 
   public async updatePasswordWithToken(updatePasswordDto: UpdatePasswordDto) {
     const { token, password } = updatePasswordDto;
-
     try {
       const sixDigitTokenExists = await prisma.verificationToken.findFirst({
         where: { token },
       });
-
       if (!sixDigitTokenExists) {
         throw CustomError.badRequest('Invalid token');
       }
 
-      const updatedUser = await prisma.user.update({
+      await prisma.user.update({
         where: { id: sixDigitTokenExists.userId },
         data: {
           password: this.hashPassword(password),
@@ -499,7 +505,9 @@ export class AuthServicePrisma {
       if (error instanceof CustomError) {
         throw error;
       }
-      throw CustomError.internalServer(`${error}`);
+      console.log(`${error}`);
+
+      throw CustomError.internalServer();
     }
   }
 }

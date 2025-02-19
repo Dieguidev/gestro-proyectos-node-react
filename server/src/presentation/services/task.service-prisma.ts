@@ -4,7 +4,7 @@ import { TaskModel } from '../../data/mongodb/models/task.model';
 import {
   CreateTaskDto,
   CustomError,
-  TaskEntity,
+
   UpdateTaskDto,
 } from '../../domain';
 import { Project, Task, TaskStatus, User } from '@prisma/client';
@@ -28,7 +28,7 @@ export class TaskServicePrisma {
         throw error;
       }
       console.log(`${error}`);
-      throw CustomError.internalServer(`${error}`);
+      throw CustomError.internalServer();
     }
   }
 
