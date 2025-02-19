@@ -137,10 +137,11 @@ export class AuthServicePrisma {
           'Correo electrónico no confirmado, se envía correo electrónico para confirmación'
         );
       }
-      // const token = await this.generateJWTTokenService(user.id);
+      const token = await this.generateJWTTokenService(user.id);
 
       return {
         message: 'Bienvenido',
+        token,
       };
     } catch (error) {
       if (error instanceof CustomError) {
@@ -372,39 +373,47 @@ export class AuthServicePrisma {
         where: { email },
       });
       if (!user) {
-        throw CustomError.badRequest('Invalid email');
+        throw CustomError.badRequest('Email no encontrado');
       }
 
-      await prisma.$transaction(async (prisma) => {
-        const sixDigitsToken = generateSixDigitToken();
-        await prisma.verificationToken.upsert({
-          where: { userId: user.id },
-          create: {
-            userId: user.id,
-            token: sixDigitsToken,
-            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-          },
-          update: {
-            token: sixDigitsToken,
-            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-          },
-        });
+      await prisma.$transaction(
+        async (prisma) => {
+          const sixDigitsToken = generateSixDigitToken();
+          await prisma.verificationToken.upsert({
+            where: { userId: user.id },
+            create: {
+              userId: user.id,
+              token: sixDigitsToken,
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+            },
+            update: {
+              token: sixDigitsToken,
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+            },
+          });
 
-        await this.sendEmaiForgotPassword({
-          email: user.email,
-          name: user.name,
-          token: sixDigitsToken,
-        });
-      });
+          await this.sendEmaiForgotPassword({
+            email: user.email,
+            name: user.name,
+            token: sixDigitsToken,
+          });
+        },
+        {
+          timeout: 15000,
+          maxWait: 20000,
+        }
+      );
 
       return {
-        user: UserResponseDto.create(user),
+        message: 'Instrucciones enviadas a tu correo',
       };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
-      throw CustomError.internalServer(`${error}`);
+      console.log(`${error}`);
+
+      throw CustomError.internalServer();
     }
   }
 
