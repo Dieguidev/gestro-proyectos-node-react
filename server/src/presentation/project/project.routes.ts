@@ -29,7 +29,7 @@ export class ProjectRoutes {
     );
 
     //*router for team members
-    router.get('/:projectId/team/find', controller.findMemberByEmail);
+    router.post('/:projectId/team/find', controller.findMemberByEmail);
     router.post('/:projectId/team', controller.addMemberById);
     router.delete('/:projectId/team/:userId', controller.removeMemberById);
     router.get('/:projectId/team', controller.getMembers);

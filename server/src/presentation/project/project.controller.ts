@@ -81,7 +81,7 @@ export class ProjectController {
     const [error, findMemberByEmailDto] = FindMemberByEmailDto.create(req.body);
     if (error) return res.status(400).json({ error });
     this.projectServicePrimsa
-      .findMemberByEmail(findMemberByEmailDto!)
+      .findMemberByEmail(findMemberByEmailDto!, req.project!.managerId)
       .then((member) => res.json(member))
       .catch((error) => this.handleError(error, res));
   };

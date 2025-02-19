@@ -150,8 +150,8 @@ export class ProjectServicePrisma {
       });
 
       return {
-        message: `Proyecto ${project.projectName} actualizado correctamente`
-       };
+        message: `Proyecto ${project.projectName} actualizado correctamente`,
+      };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -179,7 +179,10 @@ export class ProjectServicePrisma {
     }
   }
 
-  async findMemberByEmail(findMemberByEmailDto: FindMemberByEmailDto) {
+  async findMemberByEmail(
+    findMemberByEmailDto: FindMemberByEmailDto,
+    managerId: User['id']
+  ) {
     const { email } = findMemberByEmailDto;
     try {
       const user = await prisma.user.findUnique({
@@ -194,6 +197,9 @@ export class ProjectServicePrisma {
       });
       if (!user) {
         throw CustomError.notFound('Usuario no encontrado');
+      }
+      if (user.id === managerId) {
+        throw CustomError.badRequest('No puedes agregarte a ti mismo');
       }
       return user;
     } catch (error) {
