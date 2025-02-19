@@ -168,7 +168,7 @@ export class ProjectServicePrisma {
           id: projectId,
         },
       });
-      return 'Project deleted';
+      return 'Proyecto Eliminado correctamente';
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
