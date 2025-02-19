@@ -104,9 +104,12 @@ export class ProjectServicePrisma {
           },
           Task: {
             select: {
-              id:true
-            }
-          }
+              id: true,
+              name: true,
+              description: true,
+              status: true,
+            },
+          },
         },
       });
       if (!project) {
@@ -146,7 +149,9 @@ export class ProjectServicePrisma {
         },
       });
 
-      return { project };
+      return {
+        message: `Proyecto ${project.projectName} actualizado correctamente`
+       };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -299,7 +304,6 @@ export class ProjectServicePrisma {
     }
   }
 
-
   async getMembers(project: Project['id']) {
     const members = await prisma.project.findUnique({
       where: {
@@ -315,9 +319,9 @@ export class ProjectServicePrisma {
                 email: true,
               },
             },
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     return members?.TeamProject;
