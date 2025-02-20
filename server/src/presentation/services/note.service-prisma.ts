@@ -51,13 +51,14 @@ export class NoteServicePrisma {
   }
 
   async deleteNoteById(noteId: Note['id'], userId: User['id']) {
-    console.log(noteId);
+
     try {
+
+
       //TODO: Implementar un middleware para validar el id de la nota y su existencia
       if(!Validators.isUUID(noteId)) {
         throw CustomError.badRequest('El id de la nota no es válido');
       }
-      console.log('aqui');
 
       const note = await prisma.note.findUnique({
         where: {

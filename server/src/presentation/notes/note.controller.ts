@@ -42,7 +42,7 @@ export class NoteController {
 
   deleteNoteById = (req: Request, res: Response) => {
     const { noteId } = req.params;
-
+    console.log(req.params);
     this.noteServicePrisma
       .deleteNoteById(noteId, req.userPrisma!.id)
       .then((response) => res.json(response))
