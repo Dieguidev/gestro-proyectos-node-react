@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { ValidateProjectMiddleware } from '../middlewares/validate-project-exists.middleware';
-import { TaskService } from '../services/task.service';
 import { TaskController } from './task.controller';
 import { ValidateTaskMiddleware } from '../middlewares/validate-task.middleware';
 import { AuthMiddleware } from '../middlewares/auth.middleware';

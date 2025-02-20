@@ -174,7 +174,7 @@ export class TaskServicePrisma {
       }
 
       if (task.status === status) {
-        throw CustomError.badRequest('Task already has this status');
+        throw CustomError.badRequest('Tarea ya tiene este estado');
       }
 
       await prisma.task.update({
