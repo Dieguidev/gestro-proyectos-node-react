@@ -1,12 +1,7 @@
 import { startSession } from 'mongoose';
 
 import { TaskModel } from '../../data/mongodb/models/task.model';
-import {
-  CreateTaskDto,
-  CustomError,
-
-  UpdateTaskDto,
-} from '../../domain';
+import { CreateTaskDto, CustomError, UpdateTaskDto } from '../../domain';
 import { Project, Task, TaskStatus, User } from '@prisma/client';
 import { prisma } from '../../data/prisma/prisma-db';
 
@@ -100,7 +95,7 @@ export class TaskServicePrisma {
         },
       });
 
-      return { task: taskDetails };
+      return { ...taskDetails };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -113,19 +108,19 @@ export class TaskServicePrisma {
     const { name, description } = updateTaskdto;
     try {
       if (name === undefined && description === undefined) {
-        throw CustomError.badRequest('No data to update');
+        throw CustomError.badRequest('No hay datos que actualizar');
       }
       const task = await prisma.task.update({
         where: {
           id: taskId,
         },
         data: {
-          name,
-          description,
+          name: name ? name : undefined,
+          description: description ? description : undefined,
         },
       });
 
-      return 'tarea actualizado correctamente';
+      return 'Tarea editada exitosamente';
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -137,8 +132,6 @@ export class TaskServicePrisma {
   }
 
   async deleteTask(projectId: Project['id'], taskId: Task['id']) {
-    const session = await startSession();
-    session.startTransaction();
     try {
       await prisma.task.delete({
         where: {
@@ -158,7 +151,11 @@ export class TaskServicePrisma {
   }
 
   //TODO: Falta verificar si un miembro del equipo puede realizar esta operacion(middleware para validar si el usuario pertenece al proyecto)
-  async updateTaskStatus(updateTaskdto: UpdateTaskDto, task: any, userId: User['id']) {
+  async updateTaskStatus(
+    updateTaskdto: UpdateTaskDto,
+    task: any,
+    userId: User['id']
+  ) {
     const { status } = updateTaskdto;
     try {
       if (status === undefined) {
